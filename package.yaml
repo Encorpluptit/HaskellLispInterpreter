@@ -26,7 +26,7 @@ library:
   source-dirs: src
 
 executables:
-  FunHAL-exe:
+  hal:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -37,7 +37,7 @@ executables:
     - FunHAL
 
 tests:
-  FunHAL-test:
+  hal-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
