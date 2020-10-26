@@ -29,6 +29,7 @@ library
   exposed-modules:
       Lib
       Parsing
+      IOUtils
   other-modules:
       Paths_FunHAL
   hs-source-dirs:
