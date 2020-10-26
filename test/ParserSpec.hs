@@ -1,7 +1,6 @@
 module ParserSpec where
 
 import Test.Hspec
-import Test.QuickCheck
 import Data.Either
 import Parsing
 
