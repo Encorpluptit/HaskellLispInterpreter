@@ -1,14 +1,11 @@
 module Parsing where
 
-import Data.Either
 import Control.Applicative
 
 type Error = String
 type Result a = Either Error (a , String)
 
-data Parser a = Parser {
-    runParser :: String -> Result a
-}
+newtype Parser a = Parser {runParser :: String -> Result a}
 
 parseChar :: Char -> Parser Char
 parseChar c = Parser fct
@@ -115,7 +112,7 @@ instance Functor Parser where
 
 instance Applicative Parser where
     pure = return
-    p1 <*> p2 = do x<-p1; y<-p2; return (x y)
+    p1 <*> p2 = do x <- p1; x <$> p2
 
 --instance Applicative Parser where
 --    pure p = Parser $ \x -> Right (p, x)
