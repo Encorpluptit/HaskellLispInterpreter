@@ -48,6 +48,8 @@ executable hal
   build-depends:
       FunHAL
     , base >=4.7 && <5
+    , haskeline
+    , containers
   default-language: Haskell2010
 
 test-suite hal-test
