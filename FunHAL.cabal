@@ -11,7 +11,7 @@ version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/githubuser/FunHAL#readme>
 homepage:       https://github.com/githubuser/FunHAL#readme
 bug-reports:    https://github.com/githubuser/FunHAL/issues
-author:         Author name here
+author:         BERNARD Damien
 maintainer:     damien.bernard@epitech.eu
 copyright:      2020 BERNARD Damien
 license:        BSD3
@@ -60,4 +60,6 @@ test-suite hal-test
   build-depends:
       FunHAL
     , base >=4.7 && <5
+    , QuickCheck
+    , hspec
   default-language: Haskell2010

@@ -5,7 +5,8 @@
 ## Makefile
 ##
 
-package			=	hal
+package			=	FunHAL
+NAME			=	hal
 
 stack_yaml		=	STACK_YAML="stack.yaml"
 stack			=	$(stack_yaml) stack
@@ -26,7 +27,7 @@ fclean: clean
 
 build:
 	@$(stack) build $(package)
-	@cp $(executable)/bin/$(package) .
+	@cp $(executable)/bin/$(NAME) .
 
 
 build-dirty:
