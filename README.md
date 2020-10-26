@@ -9,6 +9,7 @@
    - [Haskell_Package](https://hackage.haskell.org/package/containers)
  - QuickCheck
    - [Tutorial](https://begriffs.com/posts/2017-01-14-design-use-quickcheck.html)
+   - [second](http://www.cse.chalmers.se/~rjmh/QuickCheck/manual.html)
    
 # Useful Links
  - Chez Scheme (Reference).
