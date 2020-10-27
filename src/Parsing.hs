@@ -2,11 +2,30 @@ module Parsing where
 
 import Control.Applicative
 
-type Error = String
-type Result a = Either Error (a , String)
+-- |-------------------------------------------------------------------------------------------------------------
+-- Types Used in Parsing Lib:
+--
+-- * ParsingError:
+--      Simple Alias to string in order to avoid confusion in functions signatures.
+--
+-- * Result:
+--      Alias to an Either Generic Type with:
+--          - ParsingError as Left Value (Error).
+--          - Tuple with parsed generic type as first value and rest of unparsed string as second value (Success).
+--
+-- * Parser:
+--      Newtype with fields:
+--          - runParser:
+--              function that take a String as Parameter and return the parsed type wrapped in Result (Either Value).
+
+type ParsingError = String
+type Result a = Either ParsingError (a , String)
 
 newtype Parser a = Parser {runParser :: String -> Result a}
 
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Function that take a Char as parameter and return a Parser Type that Parse the Requested Character.
+-- If the requested Char is not found or if String parameter is empty
 parseChar :: Char -> Parser Char
 parseChar c = Parser fct
     where
@@ -15,22 +34,27 @@ parseChar c = Parser fct
             | otherwise = Left $ "ParseChar failed {Left:" ++ xs ++ "}"
         fct [] = Left "ParseChar failed: Empty or End of List"
 
+-- TODO: Doc
 parseDigit :: Parser Char
 parseDigit = parseAnyChar ['0'..'9']
 
+-- TODO: Doc
 parseFloatDigit :: Parser Char
 parseFloatDigit = parseAnyChar ('.':['0'..'9'])
 
 -- Using Alternative <|> (parseOr) to parse a char or the rest of the string
+-- TODO: Doc
 parseAnyChar :: String -> Parser Char
 parseAnyChar = foldr ((<|>) . parseChar) failed
     where failed = Parser $ const $ Left "ParseAnyChar failed: Empty or End of List"
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+-- TODO: Doc
 parseUInt :: Parser Int
 parseUInt = read <$> some parseDigit
 
 -- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+-- TODO: Doc
 parseInt :: Parser Int
 parseInt = parseNegInt <|> parseUInt
     where
@@ -38,38 +62,49 @@ parseInt = parseNegInt <|> parseUInt
         parseNegInt = (negate <$ parseChar '-') <*> parseUInt
 
 -- Using fmap infix notation to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+-- TODO: Doc
 parseUFloat :: Parser Float
 parseUFloat = (read::String->Float) <$> some parseFloatDigit
 
 -- Using Alternative Functor to read Int from String (ghc understand itself String->Int) on the digits chars parsed by parseSome.
+-- TODO: Doc
 parseFloat :: Parser Float
 parseFloat = parseNegFloat <|> parseUFloat
     where
 --        parseNegFloat = const negate <$> parseChar '-' <*> parseUFloat
         parseNegFloat = (negate <$ parseChar '-') <*> parseUFloat
 
+-- TODO: Doc
 parseUDouble :: Parser Double
 parseUDouble = read <$> some parseFloatDigit
 
+-- TODO: Doc
 parseDouble :: Parser Double
 parseDouble = parseNegDouble <|> parseUDouble
     where
         parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
 
+-- TODO: Doc
+parseSpaced :: String -> Parser Char
+parseSpaced = parseAnyChar
+
+-- TODO: Doc
+parseManySpaced :: Parser a -> Parser a
+parseManySpaced p = many (parseAnyChar "\t ") *> p <* many (parseAnyChar "\t ")
+
+-- TODO: Doc
 parseSpacedChar :: Char -> Parser Char
-parseSpacedChar c = parseSpaced $ parseChar c
+parseSpacedChar c = parseManySpaced $ parseChar c
 
-parseSpaced :: Parser a -> Parser a
-parseSpaced p = many (parseAnyChar "\t ") *> p <* many (parseAnyChar "\t ")
-
+-- TODO: Doc
 parseTuple :: Parser a -> Parser (a, a)
 parseTuple p = openPar *> parseTuple' <* closePar
     where
         parseTuple'     = parseElem <|> Parser (\_ -> Left "Parsing Tuple Failed")
         parseElem       = (\x y -> (x, y)) <$> p <*> (comma *> p)
-        openPar         = parseSpaced $ parseChar '('
-        closePar        = parseSpaced $ parseChar ')'
-        comma           = parseSpaced $ parseChar ','
+        openPar         = parseManySpaced $ parseChar '('
+        closePar        = parseManySpaced $ parseChar ')'
+        comma           = parseManySpaced $ parseChar ','
 
 
 --instance Functor Parser where
@@ -88,7 +123,6 @@ parseTuple p = openPar *> parseTuple' <* closePar
 --      - <|>
 --      - some
 --      - many
--- | -----------------------------------------------------------------------------
 
 instance Functor Parser where
     fmap f p = do x<-p; return (f x)
