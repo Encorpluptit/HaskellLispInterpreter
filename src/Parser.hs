@@ -1,16 +1,15 @@
 module Parser
 (
     run
-  , runP
+  , parseExpr
 )
 where
 
 import Control.Applicative
 import LibParsing
 import DataTypes
-import Errors
 import Eval
-
+import Errors
 
 
 run :: Parser a -> String -> Result a
@@ -18,10 +17,12 @@ run (Parser p) str = case p str of
     Right (a, [])   -> Right (a, [])
     Left msg        -> Left msg
 --
-runP :: String -> Result LispVal
-runP str = case runParser parseLispVal str of
-    Right (a, [])   -> Right (eval a, [])
-    Left msg        -> Left msg
+parseExpr :: String -> ThrowsError LispVal
+parseExpr str = case runParser parseLispVal str of
+--    Right (a, [])   -> Right (eval a, [])
+--    Left msg        -> Left msg
+    Right (a, [])   -> eval a
+    Left msg        -> throw $ UnknownError msg
 
 
 parseLispVal :: Parser LispVal

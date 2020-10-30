@@ -1,9 +1,11 @@
 module Errors
 ( HALError(..)
-, ThrowsError(..)
+, ThrowsError
+, throw
 ) where
 
 import DataTypes
+--import Control.Exception
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- ressources
@@ -12,35 +14,39 @@ import DataTypes
 
 data HALError = UnknownError    String          -- generic Error
 --                | NumArgs       String Int      -- (eq? 1)
-                | NumArgs       Integer LispVal     -- (eq? 1)
+                | NbArgsError   String Integer LispVal     -- (eq? 1)
                 | TypeError     String  LispVal          -- (eq? 1 "l")
                 | UnboundVar    String          -- (eq? foo 1)   { foo not defined }
+                | BuiltinError  String [LispVal]
 --                | NotFunction   String          -- (foo 1)       { (define foo 0) }
---                | KeywordError  String          -- Useful with unbound Var ?
+                | KeywordError  LispVal  -- Useful with unbound Var ?
                 | SyntaxError   String          -- (define foo 0
 --                | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
 instance Show HALError where
     show = showHALError
---    show (KeywordError msg) = "Unkown Keyword: " ++ msg
 
 showHALError :: HALError -> String
 showHALError (UnknownError msg) = "Unknown Error: " ++ msg
-showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ show val
-showHALError (NumArgs nb val) = "Wrong Number of Args in:" ++ show val ++ "Expected: " ++ show nb
-showHALError (UnboundVar var) = "UnboundVar" ++ var
+showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ " -> " ++ show val
+showHALError (NbArgsError op nb val) = "Wrong Number of Args in operator { " ++ op ++ " }. Expected "
+    ++ show nb ++ " operand(s) -> Got: " ++ show val
+showHALError (UnboundVar var) = "UnboundVar: " ++ var
+showHALError (BuiltinError builtin args) = "Unrecognised " ++ builtin ++ " (built-in) args: " ++ show args
 showHALError (SyntaxError msg) = msg
+showHALError (KeywordError val) = "KeyWord Error, got : " ++ show val
 
 newtype ThrowsError a = HandleError (Either HALError a)
+    deriving(Show)
 
 instance Functor ThrowsError where
-    fmap _ (HandleError (Left err)) = HandleError $ Left err
-    fmap f (HandleError (Right val)) = HandleError . Right $ f val
+    fmap _ (HandleError (Left err))     = HandleError $ Left err
+    fmap f (HandleError (Right val))    = HandleError . Right $ f val
 
 instance Applicative ThrowsError where
     pure = HandleError . Right
-    (HandleError (Left err)) <*> _ = HandleError (Left err)
-    (HandleError (Right f)) <*> x = fmap f x
+    (HandleError (Left err)) <*> _  = HandleError (Left err)
+    (HandleError (Right f)) <*> x   = fmap f x
 
 instance Monad ThrowsError where
     (HandleError te) >>= f =
