@@ -27,32 +27,32 @@ instance Show HALError where
 showHALError :: HALError -> String
 showHALError (UnknownError msg) = "Unknown Error: " ++ msg
 showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ show val
-showHALError (NumArgs nb _) = "Wrong Number of Args in:" ++ "" ++ "Expected: " ++ show nb
+showHALError (NumArgs nb val) = "Wrong Number of Args in:" ++ show val ++ "Expected: " ++ show nb
 showHALError (UnboundVar var) = "UnboundVar" ++ var
 showHALError (SyntaxError msg) = msg
 
-newtype ThrowsError a = TE (Either HALError a)
+newtype ThrowsError a = HandleError (Either HALError a)
 
 instance Functor ThrowsError where
-    fmap _ (TE (Left err)) = TE $ Left err
-    fmap f (TE (Right val)) = TE . Right $ f val
+    fmap _ (HandleError (Left err)) = HandleError $ Left err
+    fmap f (HandleError (Right val)) = HandleError . Right $ f val
 
 instance Applicative ThrowsError where
-    pure = TE . Right
-    (TE (Left err)) <*> _ = TE (Left err)
-    (TE (Right f)) <*> x = fmap f x
+    pure = HandleError . Right
+    (HandleError (Left err)) <*> _ = HandleError (Left err)
+    (HandleError (Right f)) <*> x = fmap f x
 
 instance Monad ThrowsError where
-    (TE te) >>= f =
+    (HandleError te) >>= f =
         case te of
-            Left err -> TE (Left err)
+            Left err -> HandleError (Left err)
             Right val -> f val
 
-    return val = TE $ Right val
+    return val = HandleError $ Right val
 --    fail err = TE . Left $ Error err
 
 throw :: HALError -> ThrowsError a
-throw err = TE $ Left err
+throw err = HandleError $ Left err
 
 
 

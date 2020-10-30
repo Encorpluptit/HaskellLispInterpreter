@@ -4,7 +4,7 @@ module DataTypes
 ) where
 
 --import Errors
-
+--import Data.Ratio
 
 --data LispNum = NumInt Int
 --            | NumInteger Integer
@@ -12,6 +12,7 @@ module DataTypes
 --            | NumFloat Float
 --            | NumDouble Double
 --            --
+--            | NumRational Rational
 ----            | NumFract (Fractional)
 --                deriving (Show)
 --
@@ -27,34 +28,34 @@ module DataTypes
 ----             | Func (LispData -> ThrowsError LispData)
 
 data LispVal = Atom String
-            | List [LispVal]
+            | ValList [LispVal]
             -- To replace by  LispNum ??
-            | Number Integer
+            | ValNum Integer
             --
             | ValBool Bool
             | ValString String
 --            | Fun IFunc
 --            | Lambda IFunc EnvCtx
             | Nil
-                deriving (Eq)
---                deriving (Eq, Show)
+--                deriving (Eq)
+                deriving (Eq, Show)
 
-instance Show LispVal where
-    show val = showVal val
+--instance Show LispVal where
+--    show val = showVal val
+--
+--showVal :: LispVal -> String
+--showVal val =
+--  case val of
+--    (Atom atom)         -> atom
+--    (ValString txt)     -> "\"" ++ txt ++ "\""
+--    (Number num)        -> show num
+--    (ValBool True)      -> "#t"
+--    (ValBool False)     -> "#f"
+--    Nil                 -> "'()"
+--    (List contents)     -> "(" ++ unwordsListVal contents ++  ")"
+----    (Fun _ )        -> "(internal function)"
+----    (Lambda _ _)    -> "(lambda function)"
 
-showVal :: LispVal -> String
-showVal val =
-  case val of
-    (Atom atom)         -> atom
-    (ValString txt)     -> "\"" ++ txt ++ "\""
-    (Number num)        -> show num
-    (ValBool True)      -> "#t"
-    (ValBool False)     -> "#f"
-    Nil                 -> "'()"
-    (List contents)     -> "(" ++ unwordsListVal contents ++  ")"
+--unwordsListVal :: [LispVal] -> String
+--unwordsListVal list = unwords $ showVal <$> list
 
-unwordsListVal :: [LispVal] -> String
-unwordsListVal list = unwords $ showVal <$> list
-
---    (Fun _ )        -> "(internal function)"
---    (Lambda _ _)    -> "(lambda function)"
