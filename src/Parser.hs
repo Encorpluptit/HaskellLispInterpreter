@@ -1,9 +1,40 @@
-module Parser where
+module Parser
+(
+    run
+  , runP
+)
+where
 
-import LibParsing
 import Control.Applicative
-import Errors
+import LibParsing
 import DataTypes
+import Errors
+import Eval
+
+
+
+run :: Parser a -> String -> Result a
+run (Parser p) str = case p str of
+    Right (a, [])   -> Right (a, [])
+    Left msg        -> Left msg
+--
+runP :: String -> Result LispVal
+runP str = case runParser parseLispVal str of
+    Right (a, [])   -> Right (eval a, [])
+    Left msg        -> Left msg
+
+
+parseLispVal :: Parser LispVal
+parseLispVal =
+    parseLispValBool
+    <|> parseLispValAtom
+    <|> parseLispValInt
+    <|> parseLispValString
+    <|> parseQuoted
+    <|> parseLispValList
+--    <|> parseLispVal
+--    parseLispVal
+
 
 -- TODO: put in lib ?
 parseSymbol :: Parser Char
@@ -44,51 +75,6 @@ parseQuoted = do
     quoted <- parseChar '\''*> parseLispVal
     return $ ValList [Atom "quote", quoted]
 
-parseLispVal :: Parser LispVal
-parseLispVal =
-    parseLispValBool
-    <|> parseLispValAtom
-    <|> parseLispValInt
-    <|> parseLispValString
-    <|> parseQuoted
-    <|> parseLispValList
---    <|> parseLispVal
---    parseLispVal
-
-eval :: LispVal -> LispVal
-eval (Atom "failed") = Atom "failed"
-eval (ValList [Atom "quote", val]) = val
-eval val@(ValString _) = val
-eval val@(ValBool _) = val
-eval val@(ValNum _) = val
-eval (ValList (Atom func : args)) = apply func $ map eval args
-
-
-apply :: String -> [LispVal] -> LispVal
-apply func args = maybe (ValBool False) ($ args) $ lookup func primitives
-
-primitives :: [(String, [LispVal] -> LispVal)]
-primitives = [
-    ("+", numericBinop (+))
-    ]
-
-numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> LispVal
-numericBinop op params = ValNum $ foldl1 op $ map unpackNum params
-
-unpackNum :: LispVal -> Integer
-unpackNum (ValNum nb) = nb
-unpackNum (ValList [n]) = unpackNum n
-unpackNum _ = 0
-
-run :: Parser a -> String -> Result a
-run (Parser p) str = case p str of
-    Right (a, [])   -> Right (a, [])
-    Left msg        -> Left msg
---
-runP :: String -> Result LispVal
-runP str = case runParser parseLispVal str of
-    Right (a, [])   -> Right (eval a, [])
-    Left msg        -> Left msg
 
 
 --parseLispDataBool :: Parser LispData

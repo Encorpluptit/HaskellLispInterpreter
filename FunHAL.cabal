@@ -31,10 +31,11 @@ library
       ExitError
       --
       DataTypes
+      Parser
+      Eval
       Builtins
       Errors
       Environment
-      Parser
   other-modules:
       Paths_FunHAL
   hs-source-dirs:
