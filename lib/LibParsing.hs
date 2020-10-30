@@ -1,6 +1,7 @@
 module LibParsing where
 
 import Control.Applicative
+import Data.Ratio
 
 -- |-------------------------------------------------------------------------------------------------------------
 -- Types Used in Parsing Lib:
@@ -81,7 +82,7 @@ parseEscapedString = do
             return x
 
 -- | -----------------------------------------------------------------------------------------------------------------
--- 
+--
 parseLetter :: Parser Char
 parseLetter = parseAnyChar $ ['a'..'z'] ++ ['A'..'Z']
 
@@ -154,6 +155,14 @@ parseDouble :: Parser Double
 parseDouble = parseNegDouble <|> parseUDouble
     where
         parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
+
+parseRational :: Parser Rational
+parseRational = do
+    first   <- parseInteger
+    _       <- parseSpacedChar '/'
+    second  <- parseInteger
+--    return $ toRational $ first `mod` second
+    return $ first % second
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Return common space's like characters.
