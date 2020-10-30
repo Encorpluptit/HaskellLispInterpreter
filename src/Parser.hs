@@ -42,7 +42,7 @@ parseLispValList = do
 parseQuoted :: Parser LispVal
 parseQuoted = do
     quoted <- parseChar '\''*> parseLispVal
-    return $ ValList [Atom "quoted", quoted]
+    return $ ValList [Atom "quote", quoted]
 
 parseLispVal :: Parser LispVal
 parseLispVal =
