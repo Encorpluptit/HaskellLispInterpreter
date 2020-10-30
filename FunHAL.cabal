@@ -27,16 +27,19 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
-      Parsing
+      LibParsing
+      ExitError
+      --
+      DataTypes
       Builtins
       Errors
       Environment
-      IOUtils
+      Parser
   other-modules:
       Paths_FunHAL
   hs-source-dirs:
       src
+      lib
   build-depends:
       base >=4.7 && <5
     , haskeline
@@ -60,7 +63,7 @@ test-suite hal-test
   main-is: Spec.hs
   other-modules:
       Paths_FunHAL
-      ParserSpec
+      LibParsingSpec
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N

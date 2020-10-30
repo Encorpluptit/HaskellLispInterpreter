@@ -1,8 +1,7 @@
 module Main where
 
-import Lib
-import Parsing
-import IOUtils
+import LibParsing
+import ExitError
 
 --main :: IO ()
 --main = do

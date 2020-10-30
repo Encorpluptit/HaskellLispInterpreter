@@ -20,11 +20,7 @@
    - Quick Introduction
      - [basic](https://cisco.github.io/ChezScheme/csug9.5/use.html#./use:h1)
        ```
-        > (define fact
-            (lambda (n)
-              (if (= n 0)
-                  1
-                  (* n (fact (- n 1))))))       
+        > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))      
        ```
 
  - Bootstrap Links.

@@ -1,14 +1,84 @@
-module Errors where
+module Errors
+( HALError(..)
+, ThrowsError(..)
+) where
+
+import DataTypes
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- ressources
 -- https://www.schoolofhaskell.com/school/starting-with-haskell/basics-of-haskell/10_Error_Handling
 
-data HALError = UnknownError String
-                | SyntaxError String
-                | KeywordError String
+
+data HALError = UnknownError    String          -- generic Error
+--                | NumArgs       String Int      -- (eq? 1)
+                | NumArgs       Integer LispVal     -- (eq? 1)
+                | TypeError     String  LispVal          -- (eq? 1 "l")
+                | UnboundVar    String          -- (eq? foo 1)   { foo not defined }
+--                | NotFunction   String          -- (foo 1)       { (define foo 0) }
+--                | KeywordError  String          -- Useful with unbound Var ?
+                | SyntaxError   String          -- (define foo 0
+--                | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
 instance Show HALError where
-    show (UnknownError msg) = "Unknown Error: " ++ msg
-    show (SyntaxError msg)  = "Synthax Error: " ++ msg
-    show (KeywordError msg) = "Unkown Keyword: " ++ msg  
+    show = showHALError
+--    show (KeywordError msg) = "Unkown Keyword: " ++ msg
+
+showHALError :: HALError -> String
+showHALError (UnknownError msg) = "Unknown Error: " ++ msg
+showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ show val
+showHALError (NumArgs nb _) = "Wrong Number of Args in:" ++ "" ++ "Expected: " ++ show nb
+showHALError (UnboundVar var) = "UnboundVar" ++ var
+showHALError (SyntaxError msg) = msg
+
+newtype ThrowsError a = TE (Either HALError a)
+
+instance Functor ThrowsError where
+    fmap _ (TE (Left err)) = TE $ Left err
+    fmap f (TE (Right val)) = TE . Right $ f val
+
+instance Applicative ThrowsError where
+    pure = TE . Right
+    (TE (Left err)) <*> _ = TE (Left err)
+    (TE (Right f)) <*> x = fmap f x
+
+instance Monad ThrowsError where
+    (TE te) >>= f =
+        case te of
+            Left err -> TE (Left err)
+            Right val -> f val
+
+    return val = TE $ Right val
+--    fail err = TE . Left $ Error err
+
+throw :: HALError -> ThrowsError a
+throw err = TE $ Left err
+
+
+
+--data LispException
+--  = NumArgs Integer [LispVal]
+--  | LengthOfList T.Text Int
+--  | ExpectedList T.Text
+--  | TypeMismatch T.Text LispVal
+--  | BadSpecialForm T.Text
+--  | NotFunction LispVal
+--  | UnboundVar T.Text
+--  | Default LispVal
+--  | PError String -- from show anyway
+--  | IOError T.Text
+--
+--showError :: LispException -> T.Text
+--showError err =
+--  case err of
+--    (IOError txt)            -> T.concat ["Error reading file: ", txt]
+--    (NumArgs int args)       -> T.concat ["Error Number Arguments, expected ", T.pack $ show int, " recieved args: ", unwordsList args]
+--    (LengthOfList txt int)   -> T.concat ["Error Length of List in ", txt, " length: ", T.pack $ show int]
+--    (ExpectedList txt)       -> T.concat ["Error Expected List in funciton ", txt]
+--    (TypeMismatch txt val)   -> T.concat ["Error Type Mismatch: ", txt, showVal val]
+--    (BadSpecialForm txt)     -> T.concat ["Error Bad Special Form: ", txt]
+--    (NotFunction val)        -> T.concat ["Error Not a Function: ", showVal val]
+--    (UnboundVar txt)         -> T.concat ["Error Unbound Variable: ", txt]
+--    (PError str)             -> T.concat ["Parser Error, expression cannot evaluate: ",T.pack str]
+--    (Default val)            -> T.concat ["Error, Danger Will Robinson! Evaluation could not proceed!  ", showVal val]
+

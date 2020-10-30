@@ -1,8 +1,8 @@
-module ParserSpec where
+module LibParsingSpec where
 
 import Test.Hspec
 import Data.Either
-import Parsing
+import LibParsing
 
 spec :: Spec
 spec = describe "Lib Parser Testing" $ do

@@ -1,4 +1,4 @@
-module IOUtils where
+module ExitError where
 
 import System.Exit
 import System.IO
