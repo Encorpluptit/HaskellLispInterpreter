@@ -8,7 +8,7 @@ import DataTypes
 --import Control.Exception
 
 -- | -----------------------------------------------------------------------------------------------------------------
--- ressources
+-- resources:
 -- https://www.schoolofhaskell.com/school/starting-with-haskell/basics-of-haskell/10_Error_Handling
 
 

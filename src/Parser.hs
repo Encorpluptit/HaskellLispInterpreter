@@ -11,7 +11,6 @@ import DataTypes
 import Eval
 import Errors
 
-
 run :: Parser a -> String -> Result a
 run (Parser p) str = case p str of
     Right (a, [])   -> Right (a, [])
@@ -21,6 +20,7 @@ parseExpr :: String -> ThrowsError LispVal
 parseExpr str = case runParser parseLispVal str of
 --    Right (a, [])   -> Right (eval a, [])
 --    Left msg        -> Left msg
+--  TODO: Add throw unknown Error when Right (a, as) ??
     Right (a, [])   -> eval a
     Left msg        -> throw $ UnknownError msg
 

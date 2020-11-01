@@ -22,6 +22,8 @@
        ```
         > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))      
        ```
+   - REFERENCE DOCS
+    - [Procedures](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html)
 
  - Bootstrap Links.
    - [S-Expressions](https://en.wikipedia.org/wiki/S-expression)
