@@ -14,7 +14,7 @@ import DataTypes
 
 data HALError = UnknownError    String          -- generic Error
 --                | NumArgs       String Int      -- (eq? 1)
-                | NbArgsError   String Integer LispVal     -- (eq? 1)
+                | NbArgsError   String Integer [LispVal]     -- (eq? 1)
                 | TypeError     String  LispVal          -- (eq? 1 "l")
                 | UnboundVar    String          -- (eq? foo 1)   { foo not defined }
                 | BuiltinError  String [LispVal]
