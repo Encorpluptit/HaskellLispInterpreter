@@ -29,14 +29,21 @@ module DataTypes
 
 data LispVal = Atom String
             | ValList [LispVal]
-            -- To replace by  LispNum ??
+-- | -----------------------------------------------------------------------------------------------------------------
+-- TODO: Double, rational, etc. implementation via LispNum ?
             | ValNum Integer
-            --
+-- | -----------------------------------------------------------------------------------------------------------------
             | ValBool Bool
             | ValString String
 --            | Fun IFunc
 --            | Lambda IFunc EnvCtx
             | Nil
+-- | -----------------------------------------------------------------------------------------------------------------
+-- TODO: Char implementation
+--  * Char (WARNING: To parse before Atom):
+--      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
+--            | ValChar Char
+-- | -----------------------------------------------------------------------------------------------------------------
 --                deriving (Eq)
                 deriving (Eq, Show)
 
@@ -48,14 +55,14 @@ data LispVal = Atom String
 --  case val of
 --    (Atom atom)         -> atom
 --    (ValString txt)     -> "\"" ++ txt ++ "\""
---    (Number num)        -> show num
+--    (ValNum num)        -> show num
 --    (ValBool True)      -> "#t"
 --    (ValBool False)     -> "#f"
 --    Nil                 -> "'()"
---    (List contents)     -> "(" ++ unwordsListVal contents ++  ")"
+--    (ValList vals)  -> "(" ++ unwordsListVal vals ++  ")"
 ----    (Fun _ )        -> "(internal function)"
 ----    (Lambda _ _)    -> "(lambda function)"
-
+--
 --unwordsListVal :: [LispVal] -> String
 --unwordsListVal list = unwords $ showVal <$> list
-
+--

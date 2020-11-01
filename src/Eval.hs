@@ -9,6 +9,11 @@ eval (ValList [Atom "quote", val]) = return val
 eval val@(ValString _) = return val
 eval val@(ValBool _) = return val
 eval val@(ValNum _) = return val
+eval (ValList [Atom "if", cond, validated, other]) = do
+    condEvaluated <- eval cond
+    case condEvaluated of
+        ValBool True    -> eval validated
+        _               -> eval other
 -- | Equivalents:
 --eval (ValList (Atom func : args)) = apply func $ map eval args
 eval (ValList (Atom func : args)) = mapM eval args >>= apply func

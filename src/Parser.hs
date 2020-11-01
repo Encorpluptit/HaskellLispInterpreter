@@ -58,18 +58,31 @@ parseLispValString = do
 parseLispValInt :: Parser LispVal
 parseLispValInt = ValNum <$> parseInteger
 
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Atom:
+--  - First Char: letter or symbol
+--  - Rest: sequence of letter, digit or symbol
 parseLispValAtom :: Parser LispVal
 parseLispValAtom = do
     firstChar   <- parseLetter <|> parseSymbol
     left        <- many (parseLetter <|> parseDigit <|> parseSymbol)
     return $ Atom $ firstChar:left
 
+-- | -----------------------------------------------------------------------------------------------------------------
+-- List:
 parseLispValList :: Parser LispVal
 parseLispValList = do
     _ <- parseChar '('
     x <- ValList <$> many (parseLispVal <* many parseSpaceLike)
     _ <- parseChar ')'
     return x
+-- TODO: Choice to make between (ValList []) and Nil
+--    return (res x)
+--        where
+--            res x = case x of
+--                (ValList []) -> Nil
+--                b            -> b
 
 parseQuoted :: Parser LispVal
 parseQuoted = do
