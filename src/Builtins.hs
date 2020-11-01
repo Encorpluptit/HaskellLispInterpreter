@@ -12,14 +12,21 @@ import Errors
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Environment:
 
-type BinaryOperator a = (a -> a -> a) 
+type BinaryOperator a = (a -> a -> a)
+
+type BoolBinaryOperator a = (a -> a -> Bool)
 
 builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
 builtins = [
-    ("+", numericBinOp "+" (+)),
-    ("-", numericBinOp "-" (-)),
-    ("*", numericBinOp "*" (*)),
-    ("/", numericBinOp "/" div)
+    ("+", numericBinaryOp "+" (+)),
+    ("-", numericBinaryOp "-" (-)),
+    ("*", numericBinaryOp "*" (*)),
+--    TODO: interference with escape character used in scheme
+--    ("/", numericBinaryOp "/" div),
+    ("div", numericBinaryOp "div" div),
+    ("mod", numericBinaryOp "mod" mod),
+    ("remainder", numericBinaryOp "remainder" rem),
+    ("quotient", numericBinaryOp "quotient" quot)
     ]
 
 
@@ -28,15 +35,17 @@ builtins = [
 --  http://zvon.org/other/haskell/Outputprelude/foldl1_f.html
 -- * mapM:
 --  http://zvon.org/other/haskell/Outputprelude/mapM_f.html
-numericBinOp :: String -> BinaryOperator Integer -> [LispVal] -> ThrowsError LispVal
-numericBinOp op _ [] = throw $ NbArgsError op 2 (ValList [])
-numericBinOp op _ [val] = throw $ NbArgsError op 2 val
+numericBinaryOp :: String -> BinaryOperator Integer -> [LispVal] -> ThrowsError LispVal
+numericBinaryOp op _ [] = throw $ NbArgsError op 2 (ValList [])
+numericBinaryOp op _ [val] = throw $ NbArgsError op 2 val
 -- | TODO: manage op between != types
 -- | Equivalents:
 --numericBinOp op params = mapM unpackNum params >>= return . ValNum . foldl1 op
-numericBinOp op fct params = ValNum . foldl1 fct <$> mapM (unpackNum op) params
+numericBinaryOp op fct params = ValNum . foldl1 fct <$> mapM (unpackNumeric op) params
 
-unpackNum :: String -> LispVal -> ThrowsError Integer
-unpackNum _ (ValNum nb) = return nb
-unpackNum s (ValList [n]) = unpackNum s n
-unpackNum s err = throw $ TypeError "mismatch" err
+unpackNumeric :: String -> LispVal -> ThrowsError Integer
+unpackNumeric _ (ValNum nb) = return nb
+unpackNumeric s (ValList [n]) = unpackNumeric s n
+-- TODO: improve error reporting
+unpackNumeric s err = throw $ TypeError "mismatch" err
+
