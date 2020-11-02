@@ -20,7 +20,7 @@
    - Quick Introduction
      - [basic](https://cisco.github.io/ChezScheme/csug9.5/use.html#./use:h1)
        ```
-        > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))      
+        > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))
        ```
    - REFERENCE DOCS
     - [Procedures](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html)

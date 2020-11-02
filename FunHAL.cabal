@@ -36,6 +36,7 @@ library
       Builtins
       Errors
       Environment
+      REPL
   other-modules:
       Paths_FunHAL
   hs-source-dirs:

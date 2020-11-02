@@ -2,6 +2,7 @@ module Main where
 
 import LibParsing
 import ExitError
+import REPL
 
 --main :: IO ()
 --main = do
@@ -11,4 +12,5 @@ import ExitError
 --        Right b -> print b
 
 main :: IO ()
-main = exitError "DIE !"
+main = launchRepl
+--main = exitError "DIE !"

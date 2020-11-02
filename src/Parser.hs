@@ -28,6 +28,7 @@ parseExpr str = case runParser parseLispVal str of
 parseLispVal :: Parser LispVal
 parseLispVal =
     parseLispValBool
+--    <|> parseLispValChar TODO
     <|> parseLispValAtom
     <|> parseLispValInt
     <|> parseLispValString

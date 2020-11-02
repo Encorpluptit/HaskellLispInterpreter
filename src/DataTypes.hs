@@ -39,7 +39,7 @@ data LispVal = Atom String
 --            | Lambda IFunc EnvCtx
 --          TODO: Keep Nil ? Because lot easier for visibility in pattern matching but bad for internal usage to differentiate
 --          Solution: Alias ?
-            | Nil
+--            | Nil
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Char implementation
 --  * Char (WARNING: To parse before Atom):

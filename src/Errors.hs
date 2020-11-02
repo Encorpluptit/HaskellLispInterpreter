@@ -1,6 +1,7 @@
 module Errors
 ( HALError(..)
 , ThrowsError
+, unpackError
 , throw
 ) where
 
@@ -55,8 +56,10 @@ instance Monad ThrowsError where
             Right val -> f val
 
     return val = HandleError $ Right val
---    fail err = TE . Left $ Error err
 
 throw :: HALError -> ThrowsError a
 throw err = HandleError $ Left err
+
+unpackError :: ThrowsError a -> Either HALError a
+unpackError (HandleError val) = val
 

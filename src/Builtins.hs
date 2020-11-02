@@ -42,7 +42,7 @@ builtins = [
     (">", numericBoolExpr ">" (>)),
     (">=", numericBoolExpr ">=" (>=)),
     ("<=", numericBoolExpr "<=" (<=)),
-    ("/=", numericBoolExpr "/=" (/=)),
+    ("!=", numericBoolExpr "!=" (/=)),
     ("remainder", numericBinaryOp "remainder" rem),
     ("quotient", numericBinaryOp "quotient" quot),
     ("number?", unaryOp "quotient" isNumber),
@@ -62,8 +62,6 @@ builtins = [
 -- TODO: Add the following built-ins:
 --  * More list built-ins (pair, ...):
 --      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.2
---  * Strings built-ins:
---      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.5
 --  * More Boolean built-ins (not, ...) :
 --      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.1
 -- TODO: Manage:
@@ -192,8 +190,8 @@ equal [ValBool a, ValBool b]        = return $ ValBool $ a == b
 equal [ValString a, ValString b]    = return $ ValBool $ a == b
 equal [ValList [], ValList []]      = return $ ValBool True
 -- TODO: Nil Choice
-equal [Nil, Nil]      = return $ ValBool True
--- TODO: [BONUS] Manage Equal List ? Use zip to create a list of bool and apply all on it ?
+--equal [Nil, Nil]      = return $ ValBool True
+-- TODO: [BONUS] Manage Equal List ? Use zip to create a list of bool and apply "all" on it ?
 --equal [ValList a, ValList b]        = return $ ValBool res
 --    where
 --        res = (length a == length b) && True -- put fct here and define in where

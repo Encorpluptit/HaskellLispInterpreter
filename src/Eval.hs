@@ -42,7 +42,7 @@ apply func args =
     (lookup func builtins)
 
 
--- TODO: Fix circle import
+-- TODO: Fix circle import AND FIX
 cond :: [LispVal] -> ThrowsError LispVal
 cond (ValList [condition, validated]:other) = do
     resEval <- eval condition
