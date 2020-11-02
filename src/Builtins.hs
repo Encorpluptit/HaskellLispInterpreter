@@ -1,6 +1,7 @@
 module Builtins
 (
     builtins
+  , unpackBoolean
 )
 where
 
@@ -26,12 +27,15 @@ builtins = [
 --    TODO: interference with escape character used in scheme
 --    ("/", numericBinaryOp "/" div),
     ("div", numericBinaryOp "div" div),
+--    TODO: != func for mod (take only 2 args but here can mange with many
     ("mod", numericBinaryOp "mod" mod),
     ("<", numericBoolExpr "<" (<)),
     ("atom?", unaryOp "atom?" isAtom),
     ("car", car),
     ("cdr", cdr),
     ("con", cons),
+--    ("cond", cond),
+    ("eq?", equal),
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Bonuses:
     ("=", numericBoolExpr "=" (==)),
@@ -47,7 +51,13 @@ builtins = [
     ("string?", unaryOp "string?" isString),
     ("symbol?", unaryOp "symbol?" isAtom),
     ("||", boolBoolExpr "||" (||)),
-    ("&&", boolBoolExpr "&&" (&&))
+    ("&&", boolBoolExpr "&&" (&&)),
+    ("string=?", stringBoolExpr "string=?" (==)),
+    ("string>?", stringBoolExpr "string=?" (>)),
+    ("string<?", stringBoolExpr "string=?" (<)),
+    ("string<=?", stringBoolExpr "string=?" (<=)),
+    ("string>=?", stringBoolExpr "string=?" (>=)),
+    ("string-length", stringLength)
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Add the following built-ins:
 --  * More list built-ins (pair, ...):
@@ -167,6 +177,34 @@ cdr args = throw $ NbArgsError "cdr" 1 args
 
 cons :: [LispVal] -> ThrowsError LispVal
 cons [x, ValList []] = return $ ValList [x]
+-- TODO: Nil Choice
+--cons [x, Nil]        = return $ ValList [x]
 cons [x, ValList xs] = return $ ValList (x:xs)
 cons args = throw $ NbArgsError "const" 1 args
 
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Equals
+-- TODO: [BONUS] Manage "equal?" built-in ? Weak type checking
+equal :: [LispVal] -> ThrowsError LispVal
+equal [ValNum a, ValNum b]          = return $ ValBool $ a == b
+equal [ValBool a, ValBool b]        = return $ ValBool $ a == b
+equal [ValString a, ValString b]    = return $ ValBool $ a == b
+equal [ValList [], ValList []]      = return $ ValBool True
+-- TODO: Nil Choice
+equal [Nil, Nil]      = return $ ValBool True
+-- TODO: [BONUS] Manage Equal List ? Use zip to create a list of bool and apply all on it ?
+--equal [ValList a, ValList b]        = return $ ValBool res
+--    where
+--        res = (length a == length b) && True -- put fct here and define in where
+equal [_, _]                        = return $ ValBool False
+equal value                         = throw $ NbArgsError "eq?" 2 value
+
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Strings built-ins
+stringLength :: [LispVal] -> ThrowsError LispVal
+stringLength [ValString str] = return $ ValNum $ fromIntegral $ length str
+stringLength [value] = throw $ TypeError "Mismatch Value when unpacking Bool" value
+stringLength args = throw $ NbArgsError "string-length" 1 args
+-- TODO: [BONUS] Add stringRef fct

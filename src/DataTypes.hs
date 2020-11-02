@@ -37,6 +37,8 @@ data LispVal = Atom String
             | ValString String
 --            | Fun IFunc
 --            | Lambda IFunc EnvCtx
+--          TODO: Keep Nil ? Because lot easier for visibility in pattern matching but bad for internal usage to differentiate
+--          Solution: Alias ?
             | Nil
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Char implementation
