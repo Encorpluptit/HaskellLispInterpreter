@@ -1,0 +1,28 @@
+binary_path = "./hal"
+
+[arg-less]
+    status = 0
+    args = []
+    stdin_file = "(fact 0)"
+
+[with-file]
+    status = 0
+    args = ["tests/exemples/fact.scm", "-i"]
+    stdin = "(fact 5)"
+
+[with-bad-file]
+    status = 84
+    args = ["tests/exemples/error.scm", "-i"]
+    stdin_file = "tests/jenrik/stdin/repl-with-bad-file" # Add content to the file
+    # Add error print
+
+[input-error]
+    status = 84
+    args = ["tests/exemples/fact.scm"]
+    stdin_file = "tests/jenrik/stdin/repl-input-error" # Add content to the file
+    # Add error print
+
+[fucked-up-input-but-valid]
+    status = 0
+    args = ["tests/exemples/fact.scm"]
+    stdin_file = "tests/jenrik/stdin/repl-fucked-up-input-but-valid" # Add content to the file
