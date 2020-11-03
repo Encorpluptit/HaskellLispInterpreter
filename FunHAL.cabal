@@ -66,7 +66,7 @@ test-suite hal-test
       Paths_FunHAL
       LibParsingSpec
   hs-source-dirs:
-      test
+      tests/ut
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       FunHAL
