@@ -13,7 +13,7 @@ homepage:       https://github.com/githubuser/FunHAL#readme
 bug-reports:    https://github.com/githubuser/FunHAL/issues
 author:         BERNARD Damien
 maintainer:     damien.bernard@epitech.eu
-copyright:      2020 BERNARD Damien
+copyright:      2020 BERNARD Damien VEYRENC Quentin
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -28,8 +28,9 @@ source-repository head
 library
   exposed-modules:
       LibParsing
-      ExitError
+      PrintUtils
       --
+      Core
       Arguments
       DataTypes
       Parser

@@ -1,19 +1,26 @@
-module ExitError where
+module PrintUtils where
 
 import System.Exit
 import System.IO
 
-writeError :: Show a => a -> IO ()
-writeError str = hPutStrLn stderr ("Error: " ++ show str)
-
 exitError :: IO a
 exitError = exitWith $ ExitFailure 84
+
+writeError :: Show a => a -> IO ()
+writeError str = hPutStrLn stderr ("Error: " ++ show str)
 
 writeErrorAndExit :: Show a => a -> IO b
 writeErrorAndExit str = (writeError . show) str >> exitError
 
 writeErrorsAndExit :: Show a => [a] -> IO b
 writeErrorsAndExit = foldr ((>>) . writeError) exitError
+-- | Equivalent: TODO [MARC]: Ask which better way ?
+--writeErrorsAndExit args = mapM_ writeError args >> exitError
+
+printAndExit :: Show a => a -> IO b
+printAndExit msg = print msg >> exitSuccess
+
+
 --writeErrorsAndExit :: [String] -> IO a
 --writeErrorsAndExit = foldr ((>>) . writeError) exitError
 --writeErrorsAndExit [] = exitWith  $ ExitFailure 84
