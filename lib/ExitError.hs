@@ -12,7 +12,7 @@ exitError = exitWith $ ExitFailure 84
 writeErrorAndExit :: Show a => a -> IO b
 writeErrorAndExit str = (writeError . show) str >> exitError
 
-writeErrorsAndExit :: Show a => [a] -> IO a
+writeErrorsAndExit :: Show a => [a] -> IO b
 writeErrorsAndExit = foldr ((>>) . writeError) exitError
 --writeErrorsAndExit :: [String] -> IO a
 --writeErrorsAndExit = foldr ((>>) . writeError) exitError
