@@ -28,5 +28,10 @@
  - Bootstrap Links.
    - [S-Expressions](https://en.wikipedia.org/wiki/S-expression)
    
+ - Family types
+    - https://wiki.haskell.org/GHC/Type_families
+    
+ - Type Application:
+    - https://www.seas.upenn.edu/~sweirich/papers/type-app-extended.pdf
    
 # Expressions

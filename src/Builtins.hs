@@ -24,8 +24,6 @@ builtins = [
     ("+", numericBinaryOp "+" (+)),
     ("-", numericBinaryOp "-" (-)),
     ("*", numericBinaryOp "*" (*)),
---    TODO: interference with escape character used in scheme
---    ("/", numericBinaryOp "/" div),
     ("div", numericBinaryOp "div" div),
 --    TODO: != func for mod (take only 2 args but here can mange with many
     ("mod", numericBinaryOp "mod" mod),
@@ -121,10 +119,7 @@ isString _              = ValBool False
 
 isAtom :: LispVal -> LispVal
 isAtom (Atom _) = ValBool True
--- TODO: Workaround For Nil List, parsing choice to do
 isAtom (ValList []) = ValBool True
---isAtom Nil      = ValBool True
---isAtom _        = ValBool False
 isAtom _        = ValBool False
 
 
@@ -189,8 +184,6 @@ equal [ValNum a, ValNum b]          = return $ ValBool $ a == b
 equal [ValBool a, ValBool b]        = return $ ValBool $ a == b
 equal [ValString a, ValString b]    = return $ ValBool $ a == b
 equal [ValList [], ValList []]      = return $ ValBool True
--- TODO: Nil Choice
---equal [Nil, Nil]      = return $ ValBool True
 -- TODO: [BONUS] Manage Equal List ? Use zip to create a list of bool and apply "all" on it ?
 --equal [ValList a, ValList b]        = return $ ValBool res
 --    where

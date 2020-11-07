@@ -84,13 +84,6 @@ parseLispValList = do
   _ <- parseChar ')'
   return x
 
--- TODO: Choice to make between (ValList []) and Nil
---    return (res x)
---        where
---            res x = case x of
---                (ValList []) -> Nil
---                b            -> b
-
 parseQuoted :: Parser LispVal
 parseQuoted = do
   quoted <- parseChar '\'' *> parseLispVal
