@@ -1,7 +1,6 @@
 module Parser
-  ( run,
+  (
     parseExpr,
-    process,
   )
 where
 
@@ -11,18 +10,7 @@ import Errors
 import Eval
 import LibParsing
 
-process :: String -> String
-process s = case unpackError $ parseExpr s of
-  Right x -> show x
-  Left err -> show err
 
-
-run :: Parser a -> String -> Result a
-run (Parser p) str = case p str of
-  Right (a, []) -> Right (a, [])
-  Left msg -> Left msg
-
---
 parseExpr :: String -> ThrowsError LispVal
 parseExpr str = case runParser parseLispVal str of
   --    Right (a, [])   -> Right (eval a, [])
