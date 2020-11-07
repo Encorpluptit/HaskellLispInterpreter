@@ -15,15 +15,14 @@ import DataTypes
 -- https://www.schoolofhaskell.com/school/starting-with-haskell/basics-of-haskell/10_Error_Handling
 data HALError
   = UnknownError String -- generic Error
-  --                | NumArgs       String Int      -- (eq? 1)
   | NbArgsError String Integer [LispVal] -- (eq? 1)
   | TypeError String LispVal -- (eq? 1 "l")
   | UnboundVar String -- (eq? foo 1)   { foo not defined }
   | BuiltinError String [LispVal]
-  | --                | NotFunction   String          -- (foo 1)       { (define foo 0) }
-    KeywordError LispVal -- Useful with unbound Var ?
+  -- | NotFunction   String          -- (foo 1)       { (define foo 0) }
+  | KeywordError LispVal -- Useful with unbound Var ?
   | SyntaxError String -- (define foo 0
-  --                | FileError     String          -- file don't exist ? Wrong Syntax in file ?
+  -- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
 instance Show HALError where
   show = showHALError
