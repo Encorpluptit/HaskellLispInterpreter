@@ -1,10 +1,11 @@
 module REPL where
 
+import Control.Applicative
 import Data.List (isPrefixOf)
 import Environment
 import Parser
-import Control.Applicative
 import System.Console.Haskeline
+import Core (process)
 
 launchRepl :: IO ()
 launchRepl = runInputT replSettings loop
@@ -30,9 +31,9 @@ replSettings =
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Auto Completion:
-
 halAutoComplete :: CompletionFunc IO
 halAutoComplete = completeWord Nothing "( \t" $ return . searchFunc
+
 --halAutoComplete = keywords
 --    where keywords = completeWord Nothing "( \t" (return . searchFunc) <|> completeFilename
 

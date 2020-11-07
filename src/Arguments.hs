@@ -43,7 +43,7 @@ flags =
       ["help"]
       ( NoArg $ \_ -> do
           prg <- getProgName
---          printAndExit $ usageInfo prg flags
+          --          printAndExit $ usageInfo prg flags
           putStrLn (usageInfo prg flags) >> exitSuccess
       )
       "Show this help text"

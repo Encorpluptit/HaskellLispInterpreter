@@ -1,6 +1,5 @@
 module Parser
-  (
-    parseExpr,
+  ( parseExpr,
   )
 where
 
@@ -9,7 +8,6 @@ import DataTypes
 import Errors
 import Eval
 import LibParsing
-
 
 parseExpr :: String -> ThrowsError LispVal
 parseExpr str = case runParser parseLispVal str of

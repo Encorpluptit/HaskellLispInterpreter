@@ -13,6 +13,7 @@ import DataTypes
 -- | -----------------------------------------------------------------------------------------------------------------
 -- resources:
 -- https://www.schoolofhaskell.com/school/starting-with-haskell/basics-of-haskell/10_Error_Handling
+
 data HALError
   = UnknownError String -- generic Error
   | NbArgsError String Integer [LispVal] -- (eq? 1)

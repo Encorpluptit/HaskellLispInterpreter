@@ -1,16 +1,17 @@
 module Core where
 
-import PrintUtils
-import LibParsing
 import Errors
+import LibParsing
 import Parser
+import PrintUtils
+
 --import REPL
 --import Arguments
 
-process :: String -> IO ()
+process :: String -> String
 process s = case unpackError $ parseExpr s of
-  Right x -> printAndExit x
-  Left err -> writeErrorAndExit err
+  Right x -> show x
+  Left err -> show err
 
 run :: Parser a -> String -> Result a
 run (Parser p) str = case p str of
