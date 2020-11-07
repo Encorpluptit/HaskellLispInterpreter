@@ -11,5 +11,5 @@ main = do
     res <- manageArgs args
     case res of
         (_, _, err@(_:_)) -> writeErrorsAndExit err
-        (Opts False, _, _) -> launchRepl
+        (Opts False, files, _) -> printListAndExit files
         (Opts True, _, _) -> launchRepl

@@ -73,7 +73,6 @@ builtins = [
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Operators:
---
 -- * foldl1:
 --  http://zvon.org/other/haskell/Outputprelude/foldl1_f.html
 -- * mapM:
