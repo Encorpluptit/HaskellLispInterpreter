@@ -1,6 +1,5 @@
 module REPL where
 
-import Control.Applicative
 import Data.List (isPrefixOf)
 import Environment
 import Parser
@@ -21,6 +20,9 @@ loop = do
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:
+--  * complete: auto-completion function
+--  * historyFile: Maybe String with the filepath to history file (up and down Arrow to move between history lines)
+--  * autoAddHistory: Auto add each line returned byt getInputLine
 replSettings :: Settings IO
 replSettings =
   Settings
@@ -31,18 +33,30 @@ replSettings =
     }
 
 -- | -----------------------------------------------------------------------------------------------------------------
--- Auto Completion:
+-- Hal Auto Completion Function (based on Haskeline tools):
+--  * fallbackCompletion:
+--      If the first completer produces no suggestions, fallback to the second completer's output.
+--  * completeFilename:
+--      A completion command for file and folder names.
+--  * completeScheme:
+--      Search in Scheme list of keywords possible completion.
+--  * completeWord :: Monad m => Maybe Char -> [Char] -> (String -> m [Completion]) -> CompletionFunc m
+--      - Maybe Char: An optional escape character.
+--      - [Char]: Characters which count as whitespace.
+--      - (String -> m [Completion]): Function to produce a list of possible completions.
 halAutoComplete :: CompletionFunc IO
-halAutoComplete = completeWord Nothing "( \t" $ return . searchFunc
+halAutoComplete = fallbackCompletion completeScheme completeFilename
+    where completeScheme = completeWord Nothing "( \t" $ return . searchSchemeKeywords
 
---halAutoComplete = keywords
---    where keywords = completeWord Nothing "( \t" (return . searchFunc) <|> completeFilename
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Construct a list of possible Completion if input string is prefix of schemeKeyWords.
+searchSchemeKeywords :: String -> [Completion]
+searchSchemeKeywords str = map simpleCompletion $ filter (str `isPrefixOf`) schemeKeyWords
 
-searchFunc :: String -> [Completion]
-searchFunc str = map simpleCompletion $ filter (str `isPrefixOf`) halKeyWords
-
-halKeyWords :: [String]
-halKeyWords =
+-- | -----------------------------------------------------------------------------------------------------------------
+-- List Scheme keywords handled in HAL.
+schemeKeyWords :: [String]
+schemeKeyWords =
   [ "define",
     "lambda",
     "remainder",
