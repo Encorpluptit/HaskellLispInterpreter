@@ -79,10 +79,23 @@ builtins = [
 --  http://zvon.org/other/haskell/Outputprelude/mapM_f.html
 numericBinaryOp :: String -> BinaryOperator Integer -> [LispVal] -> ThrowsError LispVal
 numericBinaryOp op _ [] = throw $ NbArgsError op 2 []
+--numericBinaryOp "+" fct [val] = ValNum (fct <$> 0 <*> unpackNumeric "+" val)
+--numericBinaryOp "+" fct [val] = ValNum . foldl1 fct <$> mapM (unpackNumeric "+") (ValNum 0: [val])
+-- TODO: Remove this HotFIX
+numericBinaryOp "+" fct [ValNum val] = return $ ValNum (0 `fct` val)
+numericBinaryOp "-" fct [ValNum val] = return $ ValNum (0 `fct` val)
+numericBinaryOp "*" fct [ValNum val] = return $ ValNum (1 `fct` val)
+numericBinaryOp "div" fct [ValNum val] = return $ ValNum (1 `fct` val)
 numericBinaryOp op _ [val] = throw $ NbArgsError op 2 [val]
 -- | TODO: manage op between != types (replace BinaryOperator Integer -> BinaryOperator LispNum ?)
 -- | Equivalents:
 --numericBinOp op params = mapM unpackNum params >>= return . ValNum . foldl1 op
+-- TODO: Remove this HotFIX
+numericBinaryOp "div" fct params = ValNum . foldl1 hotFix <$> mapM (unpackNumeric "div") params
+    where hotFix a b
+            | b < 0 = negate $ fct a (negate b)
+            | otherwise = fct a b
+
 numericBinaryOp op fct params = ValNum . foldl1 fct <$> mapM (unpackNumeric op) params
 
 boolBinaryOp :: String -> (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
