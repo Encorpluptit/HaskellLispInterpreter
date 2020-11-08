@@ -16,9 +16,3 @@ loadFile fp = do
 
 getArgsFiles :: [String] -> IO [String]
 getArgsFiles = mapM loadFile
---getArgsFiles = foldr ((:) . (>>=)) loadFile
---getArgsFiles [] = return []
---getArgsFiles (x:xs) = do
---    file <- loadFile x
---    rest <- getArgsFiles xs
---    return (file: rest)

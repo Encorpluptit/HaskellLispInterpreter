@@ -1,6 +1,7 @@
 module DataTypes
 (
-    LispVal(..)
+    LispVal(..),
+    showVal
 ) where
 
 --import Errors
@@ -46,11 +47,11 @@ data LispVal = Atom String
 --      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 --            | ValChar Char
 -- | -----------------------------------------------------------------------------------------------------------------
-                deriving (Eq)
---                deriving (Eq, Show)
-
-instance Show LispVal where
-    show val = showVal val
+--                deriving (Eq)
+                deriving (Eq, Show)
+--
+--instance Show LispVal where
+--    show val = showVal val
 
 showVal :: LispVal -> String
 showVal val =

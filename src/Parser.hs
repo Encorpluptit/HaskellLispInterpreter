@@ -1,5 +1,6 @@
 module Parser
   ( parseExpr,
+    parseLispVal,
   )
 where
 

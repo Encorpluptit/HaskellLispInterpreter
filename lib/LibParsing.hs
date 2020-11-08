@@ -223,12 +223,10 @@ instance Functor Parser where
 --                Left b -> Left b
 
 -- | -----------------------------------------------------------------------------
--- Alternative Functor:
+-- Applicative Functor:
 -- Implement:
---      - empty
---      - <|>
---      - some
---      - many
+--      - pure (same as return in monad)
+--      - <*>
 -- | -----------------------------------------------------------------------------
 instance Applicative Parser where
   pure = return
@@ -251,8 +249,8 @@ instance Applicative Parser where
 -- Implement:
 --      - empty
 --      - <|>
---      - some
---      - many
+--      - some (implicit)
+--      - many (implicit)
 -- | -----------------------------------------------------------------------------
 instance Alternative Parser where
   empty = Parser $ const $ Left "parser Empty"

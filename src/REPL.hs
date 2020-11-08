@@ -1,22 +1,23 @@
 module REPL where
 
 import Data.List (isPrefixOf)
-import Environment
-import Parser
 import System.Console.Haskeline
-import Core (process)
 
-launchRepl :: IO ()
-launchRepl = runInputT replSettings loop
 
--- TODO: use interact ?
-loop :: InputT IO ()
-loop = do
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Haskeline REPL:
+--  * launchRepl: Init lopp with default settings
+--  * loop: Core of REPL fct.
+launchRepl :: (String -> String) -> IO ()
+launchRepl printFct = runInputT replSettings $ loop printFct
+
+loop :: (String -> String) -> InputT IO ()
+loop printFct = do
   line <- getInputLine "|λ〉"
   case line of
     Nothing -> outputStrLn "Crtl + D Pressed !"
     Just "quit" -> outputStrLn "Bye."
-    Just input -> do outputStrLn (process input) >> loop
+    Just input -> do outputStrLn (printFct input) >> loop printFct
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:
