@@ -10,6 +10,7 @@ import Core (process)
 launchRepl :: IO ()
 launchRepl = runInputT replSettings loop
 
+-- TODO: use interact ?
 loop :: InputT IO ()
 loop = do
   line <- getInputLine "|λ〉"
