@@ -36,7 +36,7 @@ showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ " -> " ++ show val
 showHALError (NbArgsError op nb val) =
   "Wrong Number of Args in operator { " ++ op ++ " }. Expected "
     ++ show nb
-    ++ " operand(s) -> Got: "
+    ++ " operand(s) -> Got: " ++ show (length val) ++ " -> "
     ++ show val
 showHALError (UnboundVar var) = "UnboundVar: " ++ var
 showHALError (BuiltinError builtin args) = "Unrecognised " ++ builtin ++ " (built-in) args: " ++ show args

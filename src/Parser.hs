@@ -70,7 +70,7 @@ parseLispValList :: Parser LispVal
 parseLispValList = do
   _ <- parseChar '('
   x <- ValList <$> many (parseLispVal <* many parseSpaceLike)
-  _ <- parseChar ')' <* many parseSpaceLike
+  _ <- parseSpacedChar ')'
   return x
 
 parseQuoted :: Parser LispVal

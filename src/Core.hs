@@ -1,8 +1,9 @@
 module Core where
 
+import LibParsing
+import Options
 import Errors
 import File
-import LibParsing
 import Parser
 
 --import PrintUtils
