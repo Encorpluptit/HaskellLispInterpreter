@@ -14,8 +14,9 @@ writeErrorAndExit str = (writeError . show) str >> exitError
 
 writeErrorsAndExit :: Show a => [a] -> IO b
 writeErrorsAndExit = foldr ((>>) . writeError) exitError
+
 -- | Equivalent: TODO [MARC]: Ask which better way ?
---writeErrorsAndExit args = mapM_ writeError args >> exitError
+-- writeErrorsAndExit args = mapM_ writeError args >> exitError
 
 --writeErrorsAndExit :: [String] -> IO a
 --writeErrorsAndExit = foldr ((>>) . writeError) exitError
@@ -27,5 +28,3 @@ printAndExit msg = print msg >> exitSuccess
 
 printListAndExit :: Show a => [a] -> IO b
 printListAndExit msg = mapM_ print msg >> exitSuccess
-
-

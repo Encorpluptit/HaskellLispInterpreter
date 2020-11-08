@@ -10,11 +10,14 @@ import Eval
 import LibParsing
 
 parseExpr :: String -> ThrowsError LispVal
+--parseExpr str = case runParser (parseManySpaced parseLispVal) str of
 parseExpr str = case runParser parseLispVal str of
   --    Right (a, [])   -> Right (eval a, [])
   --    Left msg        -> Left msg
   --  TODO: Add throw unknown Error when Right (a, as) ??
   Right (a, []) -> eval a
+  Right (a, "\n") -> eval a
+  Right (a, xs) -> throw $ ParsingError a xs
   Left msg -> throw $ UnknownError msg
 
 parseLispVal :: Parser LispVal
@@ -67,7 +70,7 @@ parseLispValList :: Parser LispVal
 parseLispValList = do
   _ <- parseChar '('
   x <- ValList <$> many (parseLispVal <* many parseSpaceLike)
-  _ <- parseChar ')'
+  _ <- parseChar ')' <* many parseSpaceLike
   return x
 
 parseQuoted :: Parser LispVal

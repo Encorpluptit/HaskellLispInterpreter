@@ -25,7 +25,7 @@ builtins = [
     ("-", numericBinaryOp "-" (-)),
     ("*", numericBinaryOp "*" (*)),
     ("div", numericBinaryOp "div" div),
---    TODO: != func for mod (take only 2 args but here can mange with many
+--    TODO: != func for mod (take only 2 args but here can manage with many
     ("mod", numericBinaryOp "mod" mod),
     ("<", numericBoolExpr "<" (<)),
     ("atom?", unaryOp "atom?" isAtom),

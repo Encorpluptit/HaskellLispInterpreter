@@ -16,6 +16,7 @@ import DataTypes
 
 data HALError
   = UnknownError String -- generic Error
+  | ParsingError LispVal String -- (eq? 1)
   | NbArgsError String Integer [LispVal] -- (eq? 1)
   | TypeError String LispVal -- (eq? 1 "l")
   | UnboundVar String -- (eq? foo 1)   { foo not defined }
@@ -30,6 +31,7 @@ instance Show HALError where
 
 showHALError :: HALError -> String
 showHALError (UnknownError msg) = "Unknown Error: " ++ msg
+showHALError (ParsingError parsed left) = "Parsing Error: Parsed:\n" ++ show parsed ++ "\nLeft: "++ show left
 showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ " -> " ++ show val
 showHALError (NbArgsError op nb val) =
   "Wrong Number of Args in operator { " ++ op ++ " }. Expected "

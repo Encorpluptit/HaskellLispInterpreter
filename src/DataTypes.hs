@@ -46,25 +46,26 @@ data LispVal = Atom String
 --      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
 --            | ValChar Char
 -- | -----------------------------------------------------------------------------------------------------------------
---                deriving (Eq)
-                deriving (Eq, Show)
+                deriving (Eq)
+--                deriving (Eq, Show)
 
---instance Show LispVal where
---    show val = showVal val
---
---showVal :: LispVal -> String
---showVal val =
---  case val of
---    (Atom atom)         -> atom
---    (ValString txt)     -> "\"" ++ txt ++ "\""
---    (ValNum num)        -> show num
---    (ValBool True)      -> "#t"
---    (ValBool False)     -> "#f"
+instance Show LispVal where
+    show val = showVal val
+
+showVal :: LispVal -> String
+showVal val =
+  case val of
+    (Atom atom)         -> atom
+    (ValString txt)     -> "\"" ++ txt ++ "\""
+    (ValNum num)        -> show num
+    (ValBool True)      -> "#t"
+    (ValBool False)     -> "#f"
 --    Nil                 -> "'()"
---    (ValList vals)  -> "(" ++ unwordsListVal vals ++  ")"
-----    (Fun _ )        -> "(internal function)"
-----    (Lambda _ _)    -> "(lambda function)"
---
---unwordsListVal :: [LispVal] -> String
---unwordsListVal list = unwords $ showVal <$> list
---
+    (ValList [])        -> "'()"
+    (ValList vals)  -> "(" ++ unwordsListVal vals ++  ")"
+--    (Fun _ )        -> "(internal function)"
+--    (Lambda _ _)    -> "(lambda function)"
+
+unwordsListVal :: [LispVal] -> String
+unwordsListVal list = unwords $ showVal <$> list
+
