@@ -2,22 +2,22 @@ module REPL where
 
 import Data.List (isPrefixOf)
 import System.Console.Haskeline
-
+import Control.Monad.IO.Class
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
 --  * launchRepl: Init lopp with default settings
 --  * loop: Core of REPL fct.
-launchRepl :: (String -> String) -> IO ()
+launchRepl :: (String -> IO ()) -> IO ()
 launchRepl printFct = runInputT replSettings $ loop printFct
 
-loop :: (String -> String) -> InputT IO ()
+loop :: (String -> IO ()) -> InputT IO ()
 loop printFct = do
   line <- getInputLine "|λ〉"
   case line of
     Nothing -> outputStrLn "Crtl + D Pressed !"
     Just "quit" -> outputStrLn "Bye."
-    Just input -> do outputStrLn (printFct input) >> loop printFct
+    Just input -> do liftIO (printFct input) >> loop printFct
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:

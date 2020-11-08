@@ -8,6 +8,7 @@ import Errors
 import File
 import DataTypes
 import Options
+import PrintUtils
 import Parser
 import REPL
 
@@ -30,28 +31,34 @@ halCore opts@(Opts replOpt _) files
 --  * print with .
 --  * Print AST or Value with showTree option in Opts.
 -- TODO: remove print and process in halCore ???
-processFiles :: (String -> String) -> [String] -> IO ()
-processFiles printFct files = do
-  processedFiles <- getArgsFiles files
-  mapM_ (putStrLn . printFct) processedFiles
+processFiles :: (String -> IO ()) -> [String] -> IO ()
+--processFiles printFct files = do
+--  processedFiles <- getArgsFiles files
+--  mapM_ printFct processedFiles
 -- TODO [MARC]: Ask why this doesn't work ?
+processFiles _ [] = return ()
+processFiles printFct (x:xs) = do
+    file <- loadFile x
+    printFct file >> processFiles printFct xs
+--processFiles _ [] = return ()
+--processFiles printFct files = do
 --    (x:xs) <- getArgsFiles files
---    putStrLn (process x) >> processFiles xs
+--    printFct x >> processFiles printFct xs
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get print function from Opts:
 --  * showTree == False -> print value
 --  * showTree == True -> print Abstract Syntax Tree
-getPrintFct :: Opts -> (String -> String)
+getPrintFct :: Opts -> (String -> IO ())
 getPrintFct (Opts _ False) = printValue
 getPrintFct (Opts _ True) = printAST
 
-printValue :: String -> String
+printValue :: String -> IO ()
 printValue s = case unpackError $ parseExpr s of
-  Right x -> showVal x
-  Left err -> show err
+  Right x -> (putStrLn . showVal) x
+  Left err -> writeErrorAndExit err
 
-printAST :: String -> String
+printAST :: String -> IO ()
 printAST s = case runParser parseLispVal s of
-  Right x -> show x
-  Left err -> show err
+  Right x -> print x
+  Left err -> writeErrorAndExit err
