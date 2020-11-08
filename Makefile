@@ -28,7 +28,6 @@ fclean: clean
 build:
 	@$(stack) build $(package)
 	@cp $(executable)/bin/$(NAME) .
-	#chmod u+x $(NAME)
 
 build-dirty:
 	$(stack) build --ghc-options=-fforce-recomp $(package)

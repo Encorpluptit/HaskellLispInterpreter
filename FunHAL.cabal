@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f5e851f50de96cb027593d61b27757f7c2f8f9aaab4eb921b5e6054c07f57222
+-- hash: 9c4e974c875589869a5d96240d67636da7119cc84ef92fb131a159ef032d30a5
 
 name:           FunHAL
 version:        0.1.0.0
@@ -27,19 +27,19 @@ source-repository head
 
 library
   exposed-modules:
+      Arguments
+      Builtins
+      Core
+      DataTypes
+      Environment
+      Errors
+      Eval
+      File
+      Options
+      Parser
+      REPL
       LibParsing
       PrintUtils
-      --
-      Core
-      Arguments
-      File
-      DataTypes
-      Parser
-      Eval
-      Builtins
-      Errors
-      Environment
-      REPL
   other-modules:
       Paths_FunHAL
   hs-source-dirs:
@@ -47,8 +47,8 @@ library
       lib
   build-depends:
       base >=4.7 && <5
-    , haskeline
     , containers
+    , haskeline
   default-language: Haskell2010
 
 executable hal
@@ -63,18 +63,19 @@ executable hal
     , base >=4.7 && <5
   default-language: Haskell2010
 
-test-suite hal-test
+test-suite FunHAL-tests
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_FunHAL
       LibParsingSpec
+      QuickCheckTests
+      Paths_FunHAL
   hs-source-dirs:
       tests/ut
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       FunHAL
-    , base >=4.7 && <5
     , QuickCheck
+    , base >=4.7 && <5
     , hspec
   default-language: Haskell2010
