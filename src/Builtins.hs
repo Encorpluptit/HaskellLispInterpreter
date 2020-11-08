@@ -86,6 +86,7 @@ numericBinaryOp "+" fct [ValNum val] = return $ ValNum (0 `fct` val)
 numericBinaryOp "-" fct [ValNum val] = return $ ValNum (0 `fct` val)
 numericBinaryOp "*" fct [ValNum val] = return $ ValNum (1 `fct` val)
 numericBinaryOp "div" fct [ValNum val] = return $ ValNum (1 `fct` val)
+-- END: Remove this HotFIX
 numericBinaryOp op _ [val] = throw $ NbArgsError op 2 [val]
 -- | TODO: manage op between != types (replace BinaryOperator Integer -> BinaryOperator LispNum ?)
 -- | Equivalents:
@@ -95,7 +96,8 @@ numericBinaryOp "div" fct params = ValNum . foldl1 hotFix <$> mapM (unpackNumeri
     where hotFix a b
             | b < 0 = negate $ fct a (negate b)
             | otherwise = fct a b
-
+-- END: Remove this HotFIX
+-- TODO: Modify this for hotfix
 numericBinaryOp op fct params = ValNum . foldl1 fct <$> mapM (unpackNumeric op) params
 
 boolBinaryOp :: String -> (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
