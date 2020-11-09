@@ -1,14 +1,14 @@
 module Main where
 
-import LibParsing
-import ExitError
-
---main :: IO ()
---main = do
---    someFunc
---    case runParser parseInt "-42a" of
---        Left a  -> putStrLn a
---        Right b -> print b
+import System.Environment
+import PrintUtils
+import Core
+import Arguments
 
 main :: IO ()
-main = exitError "DIE !"
+main = do
+    args <- getArgs
+    res <- manageArgs args
+    case res of
+        (_, _, err@(_:_))   -> writeErrorsAndExit err
+        (opts, files, _)    -> halCore opts files

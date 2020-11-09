@@ -4,7 +4,7 @@ github:              "githubuser/FunHAL"
 license:             BSD3
 author:              "BERNARD Damien"
 maintainer:          "damien.bernard@epitech.eu"
-copyright:           "2020 BERNARD Damien"
+copyright:           "2020 BERNARD Damien VEYRENC Quentin"
 
 extra-source-files:
 - README.md
@@ -23,7 +23,14 @@ dependencies:
 - base >= 4.7 && < 5
 
 library:
-  source-dirs: src
+  source-dirs:
+    - src
+    - lib
+  dependencies:
+    - haskeline
+    - containers
+
+
 
 executables:
   hal:
@@ -37,7 +44,8 @@ executables:
     - FunHAL
 
 tests:
-  hal-test:
+#  hal-test:
+  FunHAL-tests:
     main:                Spec.hs
     source-dirs:         tests/ut
     ghc-options:
@@ -46,3 +54,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - FunHAL
+    - QuickCheck
+    - hspec

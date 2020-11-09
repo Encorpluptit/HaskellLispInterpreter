@@ -15,20 +15,19 @@ executable		:=	$(shell stack path --local-install-root)
 
 all: build sign
 
-re: all
+re: fclean all
 
 clean:
 	@echo "Cleaning Stack Project"
 
 
 fclean: clean
-	$(RM) $(package)
+	$(RM) $(package) $(NAME)
 
 
 build:
 	@$(stack) build $(package)
 	@cp $(executable)/bin/$(NAME) .
-
 
 build-dirty:
 	$(stack) build --ghc-options=-fforce-recomp $(package)

@@ -1,6 +1,7 @@
 module DataTypes
 (
-    LispVal(..)
+    LispVal(..),
+    showVal
 ) where
 
 --import Errors
@@ -29,33 +30,43 @@ module DataTypes
 
 data LispVal = Atom String
             | ValList [LispVal]
-            -- To replace by  LispNum ??
+-- | -----------------------------------------------------------------------------------------------------------------
+-- TODO: Double, rational, etc. implementation via LispNum ?
             | ValNum Integer
-            --
+-- | -----------------------------------------------------------------------------------------------------------------
             | ValBool Bool
             | ValString String
 --            | Fun IFunc
 --            | Lambda IFunc EnvCtx
-            | Nil
+--          TODO: Keep Nil ? Because lot easier for visibility in pattern matching but bad for internal usage to differentiate
+--          Solution: Alias ?
+--            | Nil
+-- | -----------------------------------------------------------------------------------------------------------------
+-- TODO: Char implementation
+--  * Char (WARNING: To parse before Atom):
+--      - https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.3.4
+--            | ValChar Char
+-- | -----------------------------------------------------------------------------------------------------------------
 --                deriving (Eq)
                 deriving (Eq, Show)
-
+--
 --instance Show LispVal where
 --    show val = showVal val
---
---showVal :: LispVal -> String
---showVal val =
---  case val of
---    (Atom atom)         -> atom
---    (ValString txt)     -> "\"" ++ txt ++ "\""
---    (Number num)        -> show num
---    (ValBool True)      -> "#t"
---    (ValBool False)     -> "#f"
---    Nil                 -> "'()"
---    (List contents)     -> "(" ++ unwordsListVal contents ++  ")"
-----    (Fun _ )        -> "(internal function)"
-----    (Lambda _ _)    -> "(lambda function)"
 
---unwordsListVal :: [LispVal] -> String
---unwordsListVal list = unwords $ showVal <$> list
+showVal :: LispVal -> String
+showVal val =
+  case val of
+    (Atom atom)         -> atom
+    (ValString txt)     -> "\"" ++ txt ++ "\""
+    (ValNum num)        -> show num
+    (ValBool True)      -> "#t"
+    (ValBool False)     -> "#f"
+--    Nil                 -> "'()"
+    (ValList [])        -> "'()"
+    (ValList vals)  -> "(" ++ unwordsListVal vals ++  ")"
+--    (Fun _ )        -> "(internal function)"
+--    (Lambda _ _)    -> "(lambda function)"
+
+unwordsListVal :: [LispVal] -> String
+unwordsListVal list = unwords $ showVal <$> list
 

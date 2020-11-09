@@ -20,11 +20,18 @@
    - Quick Introduction
      - [basic](https://cisco.github.io/ChezScheme/csug9.5/use.html#./use:h1)
        ```
-        > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))      
+        > (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))
        ```
+   - REFERENCE DOCS
+    - [Procedures](https://schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html)
 
  - Bootstrap Links.
    - [S-Expressions](https://en.wikipedia.org/wiki/S-expression)
    
+ - Family types
+    - https://wiki.haskell.org/GHC/Type_families
+    
+ - Type Application:
+    - https://www.seas.upenn.edu/~sweirich/papers/type-app-extended.pdf
    
 # Expressions
