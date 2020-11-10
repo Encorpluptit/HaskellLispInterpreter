@@ -7,6 +7,6 @@
         (#t (* x (posFact (- (-x) 1))))))
 
 (define (fact x)
-  (cond ((eq? x 0) 0)
+  (cond ((eq? x 0) 1)
         ((< x 0) (negFact x))
         (#t (posFact x))))
