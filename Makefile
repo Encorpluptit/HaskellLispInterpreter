@@ -9,7 +9,7 @@ package			=	FunHAL
 NAME			=	hal
 
 stack_yaml		=	STACK_YAML="stack.yaml"
-stack			=	$(stack_yaml) stack
+stack			=	$(stack_yaml) stack --allow-different-user
 executable		:=	`stack path --local-install-root`
 
 
