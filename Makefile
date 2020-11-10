@@ -10,7 +10,7 @@ NAME			=	hal
 
 stack_yaml		=	STACK_YAML="stack.yaml"
 stack			=	$(stack_yaml) stack
-executable		:=	$(shell stack path --local-install-root)
+executable		:=	`stack path --local-install-root`
 
 
 all: build sign
@@ -26,7 +26,7 @@ fclean: clean
 
 
 build:
-	@$(stack) build $(package)
+	$(stack) build $(package)
 	@cp $(executable)/bin/$(NAME) .
 
 build-dirty:
@@ -66,10 +66,10 @@ ghcid:
 
 
 dev-deps:
-	stack install ghcid
+	$(stack) install ghcid
 
 func_tests:
-	-test/run.sh
+	-tests/jenrik/all.sh
 
 tests_run: re test func_tests
 
