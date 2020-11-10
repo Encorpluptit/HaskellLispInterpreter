@@ -1,5 +1,6 @@
 module REPL where
 
+import Data.Maybe
 import Data.List (isPrefixOf)
 import System.Console.Haskeline
 import Control.Monad.IO.Class
@@ -12,12 +13,10 @@ launchRepl :: (String -> IO ()) -> IO ()
 launchRepl printFct = runInputT replSettings $ loop printFct
 
 loop :: (String -> IO ()) -> InputT IO ()
-loop printFct = do
-  line <- getInputLine "|λ〉"
-  case line of
-    Nothing -> outputStrLn "Crtl + D Pressed !"
-    Just "quit" -> outputStrLn "Bye."
-    Just input -> do liftIO (printFct input) >> loop printFct
+loop printer = getInputLine "|λ〉" >>= inputHandler
+  where inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
+        inputHandler (Just "quit") = outputStrLn "Bye."
+        inputHandler (Just input)  = liftIO (printer input) >> loop printer
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:
