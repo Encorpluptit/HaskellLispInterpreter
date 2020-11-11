@@ -2,78 +2,78 @@ binary_path = "./hal"
 
 [neg]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib -1)"]
     stdout = "0"
 
 [zero]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 0)"]
     stdout = "0"
 
 [one]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 1)"]
     stdout = "1"
 
 [two]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 2)"]
     stdout = "1"
 
 [three]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 3)"]
     stdout = "2"
 
 [four]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 4)"]
     stdout = "3"
 
 [five]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 5)"]
     stdout = "5"
 
 [six]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 6)"]
     stdout = "8"
 
 [seven]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 7)"]
     stdout = "13"
 
 [eight]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 8)"]
     stdout = "21"
 
 [nine]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 9)"]
     stdout = "34"
 
 [ten]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 10)"]
     stdout = "55"
 
 [fifty]
     status = 0
-    args = ["tests/exemples/fib.scm"]
+    args = ["tests/exemples/fib.scm", "-i"]
     stdin = ["(fib 50)"]
     stdout = "12586269025"

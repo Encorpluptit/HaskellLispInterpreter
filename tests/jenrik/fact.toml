@@ -2,36 +2,36 @@ binary_path = "./hal"
 
 [zero]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact 0)"]
     stdout = "0"
 
 [basic]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact 5)"]
     stdout = "120"
 
 [int-limit]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact 12)"]
     stdout = "479001600"
 
 [bigger-than-int]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact 14)"]
     stdout = "87178291200"
 
 [neg-even]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact -4)"]
     stdout = "-24"
 
 [neg-odd]
     status = 0
-    args = ["tests/exemples/fact.scm"]
+    args = ["tests/exemples/fact.scm", "-i"]
     stdin = ["(fact -5)"]
     stdout = "-120"
