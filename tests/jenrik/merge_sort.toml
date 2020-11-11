@@ -6,7 +6,7 @@ binary_path = "./hal"
     stdin = ["(merge-sort '())"]
     stdout = "()"
 
-[empty-list]
+[sort-list]
     status = 0
     args = ["tests/exemples/merge_sort.scm", "-i"]
     stdin = ["(merge-sort '(9 8 7 6 5 4 3 2 1))"]
