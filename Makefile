@@ -69,7 +69,7 @@ dev-deps:
 	$(stack) install ghcid
 
 func_tests:
-	-tests/jenrik/all.sh
+	-@tests/jenrik/all.sh
 
 tests_run: re test func_tests
 
