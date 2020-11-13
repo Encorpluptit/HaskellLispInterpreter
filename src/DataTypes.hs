@@ -7,6 +7,15 @@ module DataTypes
 --import Errors
 --import Data.Ratio
 
+
+--import qualified Data.Map as Map
+----newtype Env = Env (Map.Map String LispVal)
+--type Identifier = String
+--newtype Env = Env (Map.Map Identifier ([LispVal] -> LispVal))
+--
+--emptyEnv :: Env
+--emptyEnv = Env Map.empty
+
 --data LispNum = NumInt Int
 --            | NumInteger Integer
 --            -- Keep which one ?
@@ -36,6 +45,9 @@ data LispVal = Atom String
 -- | -----------------------------------------------------------------------------------------------------------------
             | ValBool Bool
             | ValString String
+--            | Func (LispVal -> ThrowsError LispVal)
+--            | Func ([LispVal] -> ThrowsError LispVal))
+--            | Func Env (Env -> [LispData] -> ThrowsError LispData)
 --            | Fun IFunc
 --            | Lambda IFunc EnvCtx
 --          TODO: Keep Nil ? Because lot easier for visibility in pattern matching but bad for internal usage to differentiate
@@ -50,8 +62,8 @@ data LispVal = Atom String
 --                deriving (Eq)
                 deriving (Eq, Show)
 --
---instance Show LispVal where
---    show val = showVal val
+--instance Show [LispVal] where
+--    show val = map showVal val
 
 showVal :: LispVal -> String
 showVal val =

@@ -9,7 +9,8 @@ import DataTypes
 import Errors
 
 -- | TODO: ??
---import qualified Data.Map as Map
+import Environment
+import qualified Data.Map as Map
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Scheme Reference:
@@ -19,8 +20,9 @@ type BinaryOperator a = (a -> a -> a)
 
 --type BoolBinaryOperator a = (a -> a -> Bool)
 
-builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
-builtins = [
+--builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
+builtins :: Env
+builtins = Env $ Map.fromList[
     ("+", numericBinaryOp "+" (+)),
     ("-", numericBinaryOp "-" (-)),
     ("*", numericBinaryOp "*" (*)),

@@ -9,15 +9,18 @@ import DataTypes
 import Errors
 import Eval
 import LibParsing
+import Builtins
+import Environment
 
-parseExpr :: String -> ThrowsError LispVal
+parseExpr :: String -> ThrowsError (LispVal, Env)
 --parseExpr str = case runParser (parseManySpaced parseLispVal) str of
 parseExpr str = case runParser parseLispVal str of
   --    Right (a, [])   -> Right (eval a, [])
   --    Left msg        -> Left msg
   --  TODO: Add throw unknown Error when Right (a, as) ??
-  Right (a, []) -> eval a
-  Right (a, "\n") -> eval a
+  -- TODO: add Env management
+  Right (a, []) -> eval builtins a
+  Right (a, "\n") -> eval builtins a
   Right (a, xs) -> throw $ ParsingError a xs
   Left msg -> throw $ UnknownError msg
 

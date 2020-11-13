@@ -40,10 +40,6 @@ processFiles _ [] = return ()
 processFiles printFct (x:xs) = do
     file <- loadFile x
     printFct file >> processFiles printFct xs
---processFiles _ [] = return ()
---processFiles printFct files = do
---    (x:xs) <- getArgsFiles files
---    printFct x >> processFiles printFct xs
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get print function from Opts:
@@ -55,10 +51,11 @@ getPrintFct (Opts _ True) = printAST
 
 printValue :: String -> IO ()
 printValue s = case unpackError $ parseExpr s of
-  Right x -> (putStrLn . showVal) x
+  Right (x, _) -> (putStrLn . showVal) x
   Left err -> writeErrorAndExit err
 
 printAST :: String -> IO ()
 printAST s = case runParser parseLispVal s of
-  Right x -> print x
+--  Right x -> print x
+  Right (x, _) -> print x
   Left err -> writeErrorAndExit err
