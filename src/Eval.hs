@@ -15,6 +15,7 @@ eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env val@(ValString _) = return (val, env)
 eval env val@(ValBool _) = return (val, env)
 eval env val@(ValNum _) = return (val, env)
+eval env (ValList (Atom "define" : val)) = define env val
 eval env (ValList (Atom "cond" : val)) = cond env val
 eval env (ValList [Atom "if", condition, validated, other]) = do
   condEvaluated <- eval env condition
@@ -26,6 +27,11 @@ eval env (ValList (Atom func : args)) = mapM (eval env) args >>= apply func env 
 --eval env (ValList (Atom func : args)) = do
 --    res <- mapM (eval env) args
 --    apply func env (map fst res)
+eval env (Atom ident) = case Map.lookup ident (toMap env) of
+    Just a -> do
+        res <- a []
+        return (res, env)
+    Nothing -> throw $ UnboundVar ident
 eval _ syntaxError = throw $ KeywordError syntaxError
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -96,14 +102,24 @@ cond _ _ = throw $ SyntaxError "Error in cond"
 -- operation may overwrite existing bindings, if present.
 --
 -- Syntax: (define <name> <expr>)
+define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+define _ [] = throw $ NbArgsError "define" 2 []
+define _ [a] = throw $ NbArgsError "define" 2 [a]
+define (Env envMap) [Atom name, expr] = do
+    (result, _) <- eval (Env envMap) expr
+--    result <- eval (Env envMap) expr
+    -- TODO: replace ValList by HFunc ?
+    trace (show result) return (Atom "#<procedure>", Env $ Map.insert name (res result) envMap)
+        where res result = return $ return result
 --define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 --define _ [] = throw $ NbArgsError "define" 2 []
 --define _ [a] = throw $ NbArgsError "define" 2 [a]
 --define (Env envMap) [Atom name, expr] = do
-----    (result, _) <- eval (Env envMap) expr
---    result <- eval (Env envMap) expr
+--    (result, _) <- eval (Env envMap) expr
+----    result <- eval (Env envMap) expr
 --    -- TODO: replace ValList by HFunc ?
---    return (ValList [], Env $ Map.insert name result envMap)
+--    trace (show result) return (ValList [], Env $ Map.insert name (res result) envMap)
+--        where res result = return $ return result
 
 define _ [_, _] = throw $ SyntaxError "define (define <name> <expr>)"
 define _ args = throw $ NbArgsError "define" 2 args
