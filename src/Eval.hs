@@ -91,3 +91,19 @@ cond env (ValList [condition, validated] : other) = do
 
 cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
 cond _ _ = throw $ SyntaxError "Error in cond"
+
+-- |define keyword used for creating global variable name bindings. This
+-- operation may overwrite existing bindings, if present.
+--
+-- Syntax: (define <name> <expr>)
+--define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+--define _ [] = throw $ NbArgsError "define" 2 []
+--define _ [a] = throw $ NbArgsError "define" 2 [a]
+--define (Env envMap) [Atom name, expr] = do
+----    (result, _) <- eval (Env envMap) expr
+--    result <- eval (Env envMap) expr
+--    -- TODO: replace ValList by HFunc ?
+--    return (ValList [], Env $ Map.insert name result envMap)
+
+define _ [_, _] = throw $ SyntaxError "define (define <name> <expr>)"
+define _ args = throw $ NbArgsError "define" 2 args

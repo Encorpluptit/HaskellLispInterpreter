@@ -3,6 +3,7 @@ module Core
   )
 where
 
+import Control.Monad (void)
 import LibParsing
 import Errors
 import File
@@ -11,6 +12,8 @@ import Options
 import PrintUtils
 import Parser
 import REPL
+import Environment
+import Builtins
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Core function:
@@ -19,10 +22,10 @@ import REPL
 --  * Print AST or Value if showTree option in Opts (Stored in printFct).
 halCore :: Opts -> [String] -> IO ()
 halCore opts@(Opts replOpt _) files
-    | replOpt = manageFiles >> launchRepl printFct
-    | otherwise = manageFiles
+    | replOpt = manageFiles >>= launchRepl printFct
+    | otherwise = Control.Monad.void manageFiles
         where
-            manageFiles = processFiles printFct files
+            manageFiles = processFiles printFct files builtins
             printFct = getPrintFct opts
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -31,31 +34,30 @@ halCore opts@(Opts replOpt _) files
 --  * print with .
 --  * Print AST or Value with showTree option in Opts.
 -- TODO: remove print and process in halCore ???
-processFiles :: (String -> IO ()) -> [String] -> IO ()
+processFiles :: (Env -> String -> IO Env) -> [String] -> Env -> IO Env
 --processFiles printFct files = do
 --  processedFiles <- getArgsFiles files
 --  mapM_ printFct processedFiles
 -- TODO [MARC]: Ask why this doesn't work ?
-processFiles _ [] = return ()
-processFiles printFct (x:xs) = do
+processFiles _ [] env = return env
+processFiles printFct (x:xs) env = do
     file <- loadFile x
-    printFct file >> processFiles printFct xs
+    printFct env file >>= processFiles printFct xs
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get print function from Opts:
 --  * showTree == False -> print value
 --  * showTree == True -> print Abstract Syntax Tree
-getPrintFct :: Opts -> (String -> IO ())
+getPrintFct :: Opts -> (Env -> String -> IO Env)
 getPrintFct (Opts _ False) = printValue
 getPrintFct (Opts _ True) = printAST
 
-printValue :: String -> IO ()
-printValue s = case unpackError $ parseExpr s of
-  Right (x, _) -> (putStrLn . showVal) x
+printValue :: Env -> String -> IO Env
+printValue env s = case unpackError $ parseExpr env s of
+  Right (x, newEnv) -> (putStrLn . showVal) x >> return newEnv
   Left err -> writeErrorAndExit err
 
-printAST :: String -> IO ()
-printAST s = case runParser parseLispVal s of
---  Right x -> print x
-  Right (x, _) -> print x
+printAST :: Env -> String -> IO Env
+printAST env s = case runParser parseLispVal s of
+  Right (x, _) -> print x >> return env
   Left err -> writeErrorAndExit err

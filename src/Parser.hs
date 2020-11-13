@@ -12,15 +12,15 @@ import LibParsing
 import Builtins
 import Environment
 
-parseExpr :: String -> ThrowsError (LispVal, Env)
+parseExpr :: Env -> String -> ThrowsError (LispVal, Env)
 --parseExpr str = case runParser (parseManySpaced parseLispVal) str of
-parseExpr str = case runParser parseLispVal str of
+parseExpr env str = case runParser parseLispVal str of
   --    Right (a, [])   -> Right (eval a, [])
   --    Left msg        -> Left msg
   --  TODO: Add throw unknown Error when Right (a, as) ??
   -- TODO: add Env management
-  Right (a, []) -> eval builtins a
-  Right (a, "\n") -> eval builtins a
+  Right (a, []) -> eval env a
+  Right (a, "\n") -> eval env a
   Right (a, xs) -> throw $ ParsingError a xs
   Left msg -> throw $ UnknownError msg
 

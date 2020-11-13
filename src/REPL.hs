@@ -3,21 +3,28 @@ module REPL where
 import Data.List (isPrefixOf)
 import System.Console.Haskeline
 import Control.Monad.IO.Class
+import Environment
+import Debug.Trace
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
 --  * launchRepl: Init lopp with default settings
 --  * loop: Core of REPL fct.
-launchRepl :: (String -> IO ()) -> IO ()
-launchRepl printFct = runInputT replSettings $ loop printFct
+launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
+launchRepl printFct env = runInputT replSettings $ loop printFct env
 
-loop :: (String -> IO ()) -> InputT IO ()
-loop printFct = do
+loop :: (Env -> String -> IO Env) -> Env -> InputT IO ()
+loop printFct env = do
   line <- getInputLine "|λ〉"
   case line of
     Nothing -> outputStrLn "Crtl + D Pressed !"
     Just "quit" -> outputStrLn "Bye."
-    Just input -> do liftIO (printFct input) >> loop printFct
+--    Just input -> liftIO (printFct env input) >>= loop printFct
+    Just input -> do
+        newEnv <- liftIO (printFct env input)
+        trace (show newEnv) loop printFct newEnv
+
+--        liftIO (printFct input) >> loop printFct
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:
