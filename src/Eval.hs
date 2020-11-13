@@ -9,8 +9,10 @@ import Errors
 import Environment
 import qualified Data.Map as Map
 import Debug.Trace
+import Control.Applicative
 
 eval :: Env -> LispVal -> ThrowsError (LispVal, Env)
+eval env (Atom ident) = getEnvVar' env ident
 eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env val@(ValString _) = return (val, env)
 eval env val@(ValBool _) = return (val, env)
@@ -23,15 +25,16 @@ eval env (ValList [Atom "if", condition, validated, other]) = do
     (ValBool True, newEnv) -> eval newEnv validated
     _ -> eval env other
 -- TODO: check env here
+--eval env (ValList (Atom func : args)) = mapM (eval env) args >>= apply func env . map fst
 eval env (ValList (Atom func : args)) = mapM (eval env) args >>= apply func env . map fst
 --eval env (ValList (Atom func : args)) = do
 --    res <- mapM (eval env) args
 --    apply func env (map fst res)
-eval env (Atom ident) = case Map.lookup ident (toMap env) of
-    Just a -> do
-        res <- a []
-        return (res, env)
-    Nothing -> throw $ UnboundVar ident
+--eval env (Atom ident) = case Map.lookup ident (toMap env) of
+--    Just a -> do
+--        res <- a []
+--        return (res, env)
+--    Nothing -> throw $ UnboundVar ident
 eval _ syntaxError = throw $ KeywordError syntaxError
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -41,16 +44,31 @@ eval _ syntaxError = throw $ KeywordError syntaxError
 apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
 --
 ---- | Equivalents:
-apply func env args = case Map.lookup func (toMap env) of
-    Just funcToApply    -> do
-        res <- ($args) funcToApply
-        return (res, env)
-    Nothing -> throw $ BuiltinError func args
---apply func args =
+--apply func env args = case Map.lookup func (toMap env) of
+--    Just funcToApply    -> do
+--        res <- ($args) funcToApply
+--        return (res, env)
+--    Nothing -> throw $ BuiltinError func args
+--apply func env args = case Map.lookup func (toMap env) of
+--    Just funcToApply    -> do
+--        res <- ($args) funcToApply
+--        return (res, env)
+--    Nothing -> case Map.lookup func (toMap env) of
+--        Just val    ->  return (val ,env)
+--        Nothing     ->  throw $ UnboundVar func
+apply func env args = do
+    res <- searchEnv <|> searchBuiltins
+    return (res, env)
+        where
+            searchEnv = getEnvVar env func
+            searchBuiltins = do
+                fct <- getBuiltins func
+                ($ args) fct
+--apply func env args =
 --  maybe
 --    (throw $ BuiltinError func args)
 --    ($ args)
---    (lookup func (toMap builtins))
+--    (lookup func builtins)
 
 
 --evalArgExprsRecurse :: [HData] -> Env -> [Expr] -> ThrowsError [HData]
@@ -105,12 +123,13 @@ cond _ _ = throw $ SyntaxError "Error in cond"
 define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 define _ [] = throw $ NbArgsError "define" 2 []
 define _ [a] = throw $ NbArgsError "define" 2 [a]
-define (Env envMap) [Atom name, expr] = do
-    (result, _) <- eval (Env envMap) expr
+define envMap [Atom name, expr] = do
+    (result, _) <- eval envMap expr
 --    result <- eval (Env envMap) expr
     -- TODO: replace ValList by HFunc ?
-    trace (show result) return (Atom "#<procedure>", Env $ Map.insert name (res result) envMap)
-        where res result = return $ return result
+    trace (show result) return (Atom name, addEnvVar name result envMap)
+--        where res result = return $ return result
+
 --define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 --define _ [] = throw $ NbArgsError "define" 2 []
 --define _ [a] = throw $ NbArgsError "define" 2 [a]

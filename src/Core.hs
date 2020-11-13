@@ -13,7 +13,6 @@ import PrintUtils
 import Parser
 import REPL
 import Environment
-import Builtins
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Core function:
@@ -25,7 +24,7 @@ halCore opts@(Opts replOpt _) files
     | replOpt = manageFiles >>= launchRepl printFct
     | otherwise = Control.Monad.void manageFiles
         where
-            manageFiles = processFiles printFct files builtins
+            manageFiles = processFiles printFct files emptyEnv
             printFct = getPrintFct opts
 
 -- | -----------------------------------------------------------------------------------------------------------------

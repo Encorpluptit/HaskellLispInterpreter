@@ -1,6 +1,6 @@
 module Builtins
 (
-    builtins
+    getBuiltins
   , unpackBoolean
 )
 where
@@ -9,8 +9,8 @@ import DataTypes
 import Errors
 
 -- | TODO: ??
-import Environment
-import qualified Data.Map as Map
+--import Environment
+--import qualified Data.Map as Map
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Scheme Reference:
@@ -20,9 +20,14 @@ type BinaryOperator a = (a -> a -> a)
 
 --type BoolBinaryOperator a = (a -> a -> Bool)
 
---builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
-builtins :: Env
-builtins = Env $ Map.fromList[
+getBuiltins :: Identifier -> ThrowsError ([LispVal] -> ThrowsError LispVal)
+getBuiltins ident =  case lookup ident builtins of
+    Just a -> return a
+    Nothing -> throw $ UnboundVar ident
+
+builtins :: [(String, [LispVal] -> ThrowsError LispVal)]
+--builtins :: Env
+builtins = [
     ("+", numericBinaryOp "+" (+)),
     ("-", numericBinaryOp "-" (-)),
     ("*", numericBinaryOp "*" (*)),

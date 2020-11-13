@@ -1,11 +1,14 @@
 module DataTypes
 (
     LispVal(..),
+    Identifier,
     showVal
 ) where
 
 --import Errors
 --import Data.Ratio
+
+type Identifier = String
 
 
 --import qualified Data.Map as Map

@@ -7,7 +7,7 @@ module Errors
 where
 
 import DataTypes
-
+import Control.Applicative
 --import Control.Exception
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -54,6 +54,14 @@ instance Applicative ThrowsError where
   pure = HandleError . Right
   (HandleError (Left err)) <*> _ = HandleError (Left err)
   (HandleError (Right f)) <*> x = fmap f x
+
+instance Alternative ThrowsError where
+  empty = HandleError . Left $ UnknownError "parser Empty"
+  (HandleError a) <|> (HandleError b) = case a of
+    Right val -> HandleError (Right val)
+    Left err -> case b of
+         Right val -> HandleError (Right val)
+         Left _ -> HandleError (Left err)
 
 instance Monad ThrowsError where
   (HandleError te) >>= f =
