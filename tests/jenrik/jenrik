@@ -1,0 +1,374 @@
+#!/usr/bin/env python3
+
+import sys
+import toml
+import os
+import subprocess
+import colored
+from colored import stylize
+import shlex
+import time
+
+JENRIK_VERSION = "1.09"
+
+TESTS_KEYS = [
+    {'name' : 'args', 'type': [list]},
+    {'name' : 'status', 'type': [int]},
+    {'name' : 'stdout', 'type': [str]},
+    {'name' : 'stderr', 'type': [str]},
+    {'name' : 'pre', 'type': [str, list]},
+    {'name' : 'post', 'type': [str, list]},
+    {'name' : 'stdout_file', 'type': [str]},
+    {'name' : 'stderr_file', 'type': [str]},
+    {'name' : 'pipe_stdout', 'type': [str]},
+    {'name' : 'pipe_stderr', 'type': [str]},
+    {'name' : 'timeout', 'type': [int, float]},
+    {'name' : 'should_fail', 'type': [bool]},
+    {'name' : 'stdin', 'type': [list]},
+    {'name' : 'stdin_file', 'type': [str]},
+    {'name' : 'env', 'type': [dict]},
+    {'name' : 'add_env', 'type': [dict]},
+    {'name' : 'repeat', 'type': [int]}
+]
+
+REQUIERED_KEYS = ['args', 'status']
+
+INCOMPATIBLES_KEYS = [('stdout', 'stdout_file'),
+                      ('stderr', 'stderr_file'),
+                      ('stdin', 'stdin_file')]
+
+QUIET_MODE = False
+
+def print_help(binary_name):
+    """ Print a basic help showing how to use Jenerik """
+    print(f"USAGE : {binary_name} file.jrk | init path_to_binary")
+    print("\tinit\t\tcreate a basic test file for the given binary")
+    print("\t--version\tprint version information and exit")
+    print("\t--help\tprint this help and exit")
+    print("\t--quiet, -q\trun in quiet mode (doesn't show the diffs)")
+
+def get_file_content(fp):
+    """ open a file and return its content """
+    if os.path.exists(fp):
+        if not os.access(fp, os.R_OK):
+            sys.exit(f"{fp} : is not readable")
+        elif os.path.isdir(fp):
+            sys.exit(f"{fp} : is a directory")
+    else:
+        sys.exit(f"{fp} : file not found")
+    try:
+        f = open(fp, 'r')
+        fc = f.read()
+        f.close()
+    except:
+        sys.exit(f"{fp} : could not open and read file")
+    return fc
+
+def init_file(fp):
+    """ Create a default test file """
+    test_file_name = 'test_' + fp + '.toml'
+
+    default_file_content = [
+        f"binary_path = \"{fp}\"\n\n",
+        "# A sample test\n",
+        "[test1]\n",
+        "args = [\"-h\"]\n",
+        "status = 0\n",
+        "stdout=\"\"\n",
+        "stderr=\"\"\n",
+    ]
+
+    if os.path.exists(test_file_name):
+        sys.exit(f"{test_file_name} already exists, can't init the file")
+    try:
+        f = open(test_file_name, 'w')
+    except:
+        sys.exit(f"Could not create file {test_file_name}")
+    for line in default_file_content:
+        f.write(line)
+    f.close()
+    print(f"Initialized {test_file_name} with success")
+
+
+def check_binary_validity(binary_path, relative_path):
+    """ Check if the binary path is a valid executable file """
+    if os.path.exists(relative_path + binary_path):
+        if not os.access(relative_path + binary_path, os.X_OK):
+            sys.exit(f"{binary_path} : is not executable")
+        elif os.path.isdir(relative_path + binary_path):
+            sys.exit(f"{binary_path} : is a directory")
+    else:
+        sys.exit(f"{binary_path} : file not found")
+
+
+def check_values_validities(test_name, values):
+    """ check if all keys values have the good type """
+    for key in TESTS_KEYS:
+        if key['name'] not in values.keys():
+            continue
+        good_type = False
+        for t in key['type']:
+            if type(values[key['name']]) == t:
+                good_type = True
+                break
+        if good_type == False:
+            sys.exit(f"{test_name}: {key['name']} value type must be in {key['type']}")
+
+    for key_pair in INCOMPATIBLES_KEYS:
+        if key_pair[0] in values.keys() and key_pair[1] in values.keys():
+            sys.exit(f"{test_name}: Incompatible keys, '{key_pair[0]}' and '{key_pair[1]}'")
+
+
+def check_tests_validity(test_name, values):
+    """ Check if all the fieds of the test are known and are valids."""
+    if type(values) != dict:
+        sys.exit(f"Invalid test : '{test_name} {values}'")
+    for key in REQUIERED_KEYS:
+        if key not in values.keys():
+            sys.exit(test_name + ": Missing field : " + key)
+
+    for key in values:
+        if key not in [d['name'] for d in TESTS_KEYS]:
+            sys.exit(f"{test_name}: Unknown key : {key}")
+    check_values_validities(test_name, values)
+
+
+def run_build_command(build_command):
+    """ run the build command """
+    if type(build_command) != str:
+        sys.exit(f"build_command value must be a string")
+    os.system(build_command)
+
+def check_test_file_validity(content, fp, relative_path):
+    """ Check if the toml test file is valid """
+    binary_path = ""
+    test_suite = {}
+
+    for key in content.keys():
+        if key == "binary_path":
+            binary_path = content[key]
+            check_binary_validity(binary_path, relative_path)
+        elif key == "build_command":
+            run_build_command(content[key])
+        else:
+            check_tests_validity(key, content[key])
+            test_suite[key] = content[key]
+
+    if binary_path == "":
+        sys.exit(f"Could not find binary_path key in {fp}")
+
+    return (relative_path + binary_path), test_suite
+
+
+class Tester:
+    """ The class containing everything to run the tests """
+
+    def __init__(self, binary_path, test_suite, relative_path):
+        self.test_suite = test_suite
+        self.binary_path = binary_path
+        self.count_tests = 0
+        self.test_should_fail = -1
+        self.count_failed_tests = 0
+        self.relative_path = relative_path
+
+
+    def print_test_sucess(self):
+        """ print a message if test success """
+        if self.test_should_fail == 0:
+            return self.print_test_failed("Test should have failed")
+        print(stylize('OK', colored.fg('green')))
+
+
+    def print_test_failed(self, e):
+        """ print a message if test fails """
+        if self.test_should_fail == 1:
+            return self.print_test_sucess()
+        self.count_failed_tests += 1
+        print(stylize('KO', colored.fg('red')), end=" : ")
+        print(e)
+
+
+    def print_diff(self, t1, t2):
+        if QUIET_MODE:
+            return
+        len1 = len(t1)
+        len2 = len(t2)
+        len_max = len1 if len1 > len2 else len2
+        print("-" * 30)
+        print("Expected:")
+        sys.stdout.write("'")
+        for c in range(len1):
+            if c < len2:
+                sys.stdout.write(t1[c])
+            else:
+                sys.stdout.write(stylize(t1[c], colored.fg("green")))
+        sys.stdout.write("'\n")
+        print("But got:")
+        sys.stdout.write("'")
+        for i in range(len_max):
+            if i > len2 - 1:
+                pass
+            elif i < len1 and t1[i] == t2[i]:
+                sys.stdout.write(t2[i])
+            else:
+                sys.stdout.write(stylize(t2[i], colored.fg('red')))
+        sys.stdout.write("'\n")
+        print("-" * 30)
+
+    def comp_output_file(self, output_file, output, output_name):
+        """ compare an output with a given file """
+        output_file = (self.relative_path + output_file).replace('/./', '/')
+        fc = get_file_content(output_file)
+        if output != fc:
+            self.print_test_failed(f"Invalid {output_name}")
+            self.print_diff(fc, output)
+            return True
+        return False
+
+
+    def apply_pipe(self, output, pipe):
+        """ apply a pipe command on a given output """
+        if pipe == "":
+            return output
+        output = os.popen('echo ' + shlex.quote(output.rstrip("\n")) + ' ' + pipe).read()
+        return output
+
+
+    def check_test_results(self, values, stdout, stderr, status):
+        """ check the tests results """
+        if 'pipe_stdout' in values:
+            stdout = self.apply_pipe(stdout, values['pipe_stdout'])
+        if 'pipe_stderr' in values:
+            stderr = self.apply_pipe(stderr, values['pipe_stderr'])
+
+        if values['status'] != status:
+            self.print_test_failed("Invalid exit status, "
+                                   f"expected {values['status']} but got {status}")
+        elif 'stdout' in values and values['stdout'] != "" \
+                and values['stdout'] != stdout:
+            self.print_test_failed("Invalid stdout")
+            self.print_diff(values['stdout'], stdout)
+        elif 'stderr' in values and values['stderr'] != "" \
+                and values['stderr'] != stderr:
+            self.print_test_failed("Invalid stderr")
+            self.print_diff(values['stderr'], stderr)
+        elif 'stdout_file' in values and self.comp_output_file(values['stdout_file'], stdout, 'stdout'):
+            pass
+        elif 'stderr_file' in values and self.comp_output_file(values['stderr_file'], stderr, 'stderr'):
+            pass
+        else:
+            self.print_test_sucess()
+
+    def run_pre_post_command(self, command):
+        """ run pre and post commands """
+        if type(command) == str and command != "":
+            os.system(command)
+        elif type(command) == list and command != []:
+            for c in command:
+                if c != "" and type(command) == str:
+                    os.system(c)
+
+
+    def fill_env(self, values):
+        my_env = os.environ.copy()
+        if 'env' in values:
+            for v in values['env'].keys():
+                my_env[v] = values['env'][v]
+        if 'add_env' in values:
+            for v in values['add_env'].keys():
+                my_env[v] = my_env[v] + values['add_env'][v]
+        return my_env
+
+
+    def fill_stdin(self, values, process):
+        """ fill the process stdin """
+        if 'stdin' in values:
+            for v in values['stdin']:
+                process.stdin.write((v + "\n").encode())
+        elif 'stdin_file' in values:
+            input_file = (self.relative_path + values['stdin_file']).replace('/./', '/')
+            fc = get_file_content(input_file)
+            for line in fc.split('\n'):
+                process.stdin.write((line + "\n").encode())
+
+    def run_test(self, values, test_name, repeat_count):
+        """ run the test in a subprocess """
+        self.count_tests += 1
+
+        if 'pre' in values:
+            self.run_pre_post_command(values['pre'])
+        my_env = self.fill_env(values)
+        test_args = [self.binary_path] + values['args']
+        try:
+            process = subprocess.Popen(test_args, stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                           env=my_env)
+        except OSError as e:
+            sys.exit(f"An error occured while executing your binary: {e}")
+        try:
+            if 'stdin' in values or 'stdin_file' in values:
+                self.fill_stdin(values, process)
+            stdout, stderr = process.communicate(timeout=values.get('timeout', None))
+            if 'stdin' in values :
+                process.stdin.close()
+        except subprocess.TimeoutExpired:
+            process.kill()
+            self.print_test_failed(f"Test timed out : terminated after {values['timeout']}s")
+        else:
+            self.check_test_results(values, stdout.decode('utf-8'),
+                                    stderr.decode('utf-8'), process.returncode)
+        if 'post' in values:
+            self.run_pre_post_command(values['post'])
+        if 'repeat' in values and values['repeat'] - repeat_count > 0:
+            print(f" - Repeat {repeat_count + 1} {test_name}: " , end="")
+            self.run_test(values, test_name, repeat_count + 1)
+
+    def print_summary(self):
+        """ print a summary of the tests results """
+        count_success = self.count_tests - self.count_failed_tests
+        print(f"\nSummary {self.binary_path}: {self.count_tests} tests ran")
+        print(f"{count_success} : {stylize('OK', colored.fg('green'))}")
+        print(f"{self.count_failed_tests} : {stylize('KO', colored.fg('red'))}")
+
+    def launch(self):
+        """ launch the tests on the test suite """
+        for test in self.test_suite:
+            self.test_should_fail = -1
+            if 'should_fail' in self.test_suite[test].keys():
+                self.test_should_fail = self.test_suite[test]['should_fail']
+            print(f"{test} : ", end='')
+            self.run_test(self.test_suite[test], test, 0)
+        self.print_summary()
+        return self.count_failed_tests
+
+def start_jenrik(fp):
+        file_content = get_file_content(fp)
+        content = toml.loads(file_content)  # Parse the toml file
+        relative_path = "/".join(fp.split('/')[0:-1]) + '/'
+        if '/' == relative_path and '/' not in fp: # dirty but works
+            relative_path = './'
+        binary_path, test_suite = check_test_file_validity(content, fp, relative_path)
+        binary_path = binary_path.replace('././', './')
+        tester = Tester(binary_path, test_suite, relative_path)
+        exit(tester.launch())
+
+def main(argc, argv):
+    global QUIET_MODE
+    if "-q" in argv or "--quiet" in argv:
+        QUIET_MODE = True
+        argv.remove("-q" if "-q" in argv else "--quiet")
+        argc -= 1
+    if argc == 2 and argv[1] == '--version':
+        return print(f"jenrik v{JENRIK_VERSION}")
+    if argc == 2 and argv[1] == '--help':
+        return print_help(argv[0])
+    if argc == 1 or argc > 3 or argc == 3 and argv[1] != 'init':
+        print_help(argv[0])
+        exit(1)
+    if argc == 3:
+        init_file(argv[2])
+    elif argc == 2:
+        start_jenrik(argv[1])
+
+if __name__ == '__main__':
+    main(len(sys.argv), sys.argv)

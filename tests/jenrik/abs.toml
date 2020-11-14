@@ -1,0 +1,25 @@
+binary_path = "./hal"
+
+[zero]
+    status = 0
+    args = ["tests/exemples/abs.scm", "-i"]
+    stdin = ["(abs 0)"]
+    stdout = "0"
+
+[-zero]
+    status = 0
+    args = ["tests/exemples/abs.scm", "-i"]
+    stdin = ["(abs -0)"]
+    stdout = "0"
+
+[pos]
+    status = 0
+    args = ["tests/exemples/abs.scm", "-i"]
+    stdin = ["(abs 10)"]
+    stdout = "10"
+
+[neg]
+    status = 0
+    args = ["tests/exemples/abs.scm", "-i"]
+    stdin = ["(abs -10)"]
+    stdout = "10"

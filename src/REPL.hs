@@ -14,17 +14,14 @@ launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
 launchRepl printFct env = runInputT replSettings $ loop printFct env
 
 loop :: (Env -> String -> IO Env) -> Env -> InputT IO ()
-loop printFct env = do
-  line <- getInputLine "|λ〉"
-  case line of
-    Nothing -> outputStrLn "Crtl + D Pressed !"
-    Just "quit" -> outputStrLn "Bye."
---    Just input -> liftIO (printFct env input) >>= loop printFct
-    Just input -> do
-        newEnv <- liftIO (printFct env input)
-        trace (show newEnv) loop printFct newEnv
-
---        liftIO (printFct input) >> loop printFct
+loop printer env = getInputLine "|λ〉" >>= inputHandler
+  where inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
+        inputHandler (Just "quit") = outputStrLn "Bye."
+        inputHandler (Just input)  = liftIO (printer env input) >>= loop printer
+-- | TODO: remove when Env Debug finished
+--        inputHandler (Just input)  = do
+--            newEnv <- liftIO (printer env input)
+--            trace (show newEnv) loop printer newEnv
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:

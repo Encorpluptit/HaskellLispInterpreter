@@ -1,0 +1,58 @@
+binary_path = "./hal"
+
+[file-less]
+    status = 0
+    args = ["-i"]
+    stdin = ["(+ 1 3)"]
+    pipe_stdout = "| head -n -1 | sed 's/|λ〉//g' | tr -d '\n'"
+    stdout = "4"
+
+[with-file]
+    status = 0
+    args = ["../tests/exemples/fact.scm", "-i"]
+    stdin = ["(fact 5)"]
+    pipe_stdout = "| head -n -1 | sed 's/|λ〉//g' | tr -d '\n'"
+    stdout = "120"
+
+[with-bad-file]
+    status = 84
+    args = ["../tests/exemples/bad-path.scm", "-i"]
+    pipe_stderr = "| cut -d ':' -f1 | tr -d '\n'"
+    stderr = "Error"
+
+[input-error]
+    status = 84
+    args = ["-i"]
+    stdin = ["ezlepzal"]
+    pipe_stderr = "| cut -d ':' -f1 | tr -d '\n'"
+    stderr = "Error"
+
+[multiple-inputs-without-relation]
+    status = 0
+    args = ["-i"]
+    stdin = [
+        "(+ 5 6)",
+        "(* (+ 4 5) (* 5 (- 5 7)))",
+        "(+ (+ 1 (+ 1 (+ 1 (+ 1 1)))) (- 1 (- 1 (- 1 (- 1 1)))))",
+        "5"
+    ]
+    pipe_stdout = "| head -n -1  | sed 's/|λ〉//g' | tr '\n' ','"
+    stdout = "11,-90,6,5,"
+
+[multiple-inputs-with-relations]
+    status = 0
+    args = ["-i", "../tests/exemples/merge_sort.scm"]
+    stdin = [
+        "(define x 100)",
+        "(define y (+ x 500))",
+        "(* (- y x) 56)",
+        "(define quatre (+ 2 2))",
+        "(define yolo '(1 2 3 44 5 6 05 43 94 3))",
+        "(define yolo2 (merge-sort yolo))",
+        "yolo2",
+        "(* (* y x) 2)"
+    ]
+    pipe_stdout = "| head -n -1  | sed 's/|λ〉//g' | tr '\n' ','"
+    stdout = "28000,(1 2 3 3 5 5 6 43 44 94),120000"
+
+#[import-files]
