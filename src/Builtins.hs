@@ -39,7 +39,7 @@ builtins = [
     ("atom?", unaryOp "atom?" isAtom),
     ("car", car),
     ("cdr", cdr),
-    ("con", cons),
+    ("cons", cons),
 --    ("cond", cond),
     ("eq?", equal),
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -182,11 +182,14 @@ stringBoolExpr procedure = boolBinaryOp procedure (unpackString procedure)
 -- TODO: Manage list with dot notation ('.') here or before ?
 car :: [LispVal] -> ThrowsError LispVal
 car [ValList (x:_)] = return x
+car [ValDottedList (x:_) _] = return x
 car [val] = throw $ TypeError "Incorrect Value Type when applying car" val
 car args = throw $ NbArgsError "car" 1 args
 
 cdr :: [LispVal] -> ThrowsError LispVal
 cdr [ValList (_:xs)] = return $ ValList xs
+cdr [ValDottedList [_] x] = return x
+cdr [ValDottedList (_:xs) x] = return $ ValDottedList xs x
 cdr [val] = throw $ TypeError "Incorrect Value Type when applying cdr" val
 cdr args = throw $ NbArgsError "cdr" 1 args
 
@@ -195,7 +198,9 @@ cons [x, ValList []] = return $ ValList [x]
 -- TODO: Nil Choice
 --cons [x, Nil]        = return $ ValList [x]
 cons [x, ValList xs] = return $ ValList (x:xs)
-cons args = throw $ NbArgsError "const" 1 args
+cons [x, ValDottedList xs end] = return $ ValDottedList (x:xs) end
+cons [a, b] = return $ ValDottedList [a] b
+cons args = throw $ NbArgsError "cons" 2 args
 
 
 -- | -----------------------------------------------------------------------------------------------------------------

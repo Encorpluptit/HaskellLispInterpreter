@@ -31,7 +31,9 @@ parseLispVal =
     <|> parseLispValInt
     <|> parseLispValString
     <|> parseQuoted
+--    <|> parseLispList
     <|> parseLispValList
+    <|> parseLispValDottedList
 
 --    <|> parseLispVal
 --    parseLispVal
@@ -49,7 +51,7 @@ parseLispValString :: Parser LispVal
 parseLispValString = do
   _ <- parseChar '"'
   x <- (:) <$> parseNotChar '"' <*> many (parseNotChar '"')
-  _ <- parseChar '"' -- <|> Error mismatched "
+--  _ <- parseChar '"' -- <|> Error mismatched "
   return (ValString x)
 
 -- parseLispDataString same as parseLispDataBool
@@ -69,12 +71,37 @@ parseLispValAtom = do
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- List:
+parseLispList :: Parser LispVal
+parseLispList = do
+  _ <- parseSpacedChar '('
+  x <- parseLispValList <|> parseLispValDottedList
+  _ <- parseSpacedChar ')'
+  return x
+
+--parseLispValList :: Parser LispVal
+--parseLispValList =ValList <$> many (parseLispVal <* many parseSpaceLike)
+
+--parseLispValDottedList :: Parser LispVal
+--parseLispValDottedList = do
+--  headDotted <- many (parseLispVal <* many parseSpaceLike)
+--  tailDotted <- parseSpacedChar '.' *> many parseSpaceLike *> parseLispValInt
+--  return $ ValDottedList headDotted tailDotted
+
 parseLispValList :: Parser LispVal
 parseLispValList = do
-  _ <- parseChar '('
+  _ <- parseSpacedChar '('
   x <- ValList <$> many (parseLispVal <* many parseSpaceLike)
   _ <- parseSpacedChar ')'
   return x
+
+
+parseLispValDottedList :: Parser LispVal
+parseLispValDottedList = do
+  _ <- parseSpacedChar '('
+  headDotted <- many (parseLispVal <* many parseSpaceLike)
+  tailDotted <- parseSpacedChar '.' *> parseLispValInt
+  _ <- parseSpacedChar ')'
+  return $ ValDottedList headDotted tailDotted
 
 parseQuoted :: Parser LispVal
 parseQuoted = do

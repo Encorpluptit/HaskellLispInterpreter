@@ -1,15 +1,14 @@
 module DataTypes
-(
-    LispVal(..),
+  ( LispVal (..),
     Identifier,
-    showVal
-) where
+    showVal,
+  )
+where
 
 --import Errors
 --import Data.Ratio
 
 type Identifier = String
-
 
 --import qualified Data.Map as Map
 ----newtype Env = Env (Map.Map String LispVal)
@@ -40,22 +39,21 @@ type Identifier = String
 --                deriving (Show)
 ----             | Func (LispData -> ThrowsError LispData)
 
-data LispVal = Atom String
-            | ValList [LispVal]
+data LispVal
+  = Atom String
+  | ValList [LispVal]
+  | ValDottedList [LispVal] LispVal
+  | ValNum Integer
+  | ValBool Bool
+  | ValString String
+  -- | Func (LispVal -> ThrowsError LispVal)
+  -- | Func ([LispVal] -> ThrowsError LispVal))
+  -- | Func Env (Env -> [LispData] -> ThrowsError LispData)
+  -- | Lambda IFunc EnvCtx
+  deriving (Eq, Show)
+
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Double, rational, etc. implementation via LispNum ?
-            | ValNum Integer
--- | -----------------------------------------------------------------------------------------------------------------
-            | ValBool Bool
-            | ValString String
---            | Func (LispVal -> ThrowsError LispVal)
---            | Func ([LispVal] -> ThrowsError LispVal))
---            | Func Env (Env -> [LispData] -> ThrowsError LispData)
---            | Fun IFunc
---            | Lambda IFunc EnvCtx
---          TODO: Keep Nil ? Because lot easier for visibility in pattern matching but bad for internal usage to differentiate
---          Solution: Alias ?
---            | Nil
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Char implementation
 --  * Char (WARNING: To parse before Atom):
@@ -63,7 +61,7 @@ data LispVal = Atom String
 --            | ValChar Char
 -- | -----------------------------------------------------------------------------------------------------------------
 --                deriving (Eq)
-                deriving (Eq, Show)
+
 --
 --instance Show [LispVal] where
 --    show val = map showVal val
@@ -71,17 +69,18 @@ data LispVal = Atom String
 showVal :: LispVal -> String
 showVal val =
   case val of
-    (Atom atom)         -> atom
-    (ValString txt)     -> "\"" ++ txt ++ "\""
-    (ValNum num)        -> show num
-    (ValBool True)      -> "#t"
-    (ValBool False)     -> "#f"
---    Nil                 -> "'()"
-    (ValList [])        -> "'()"
-    (ValList vals)  -> "(" ++ unwordsListVal vals ++  ")"
+    (Atom atom) -> atom
+    (ValString txt) -> "\"" ++ txt ++ "\""
+    (ValNum num) -> show num
+    (ValBool True) -> "#t"
+    (ValBool False) -> "#f"
+    --    Nil                 -> "'()"
+    (ValList []) -> "'()"
+    (ValDottedList vals end) -> "(" ++ unwordsListVal vals ++ " . " ++ showVal end ++ ")"
+    (ValList vals) -> "(" ++ unwordsListVal vals ++ ")"
+
 --    (Fun _ )        -> "(internal function)"
 --    (Lambda _ _)    -> "(lambda function)"
 
 unwordsListVal :: [LispVal] -> String
 unwordsListVal list = unwords $ showVal <$> list
-

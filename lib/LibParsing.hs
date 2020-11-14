@@ -32,7 +32,7 @@ parseChar c = Parser fct
   where
     fct (x : xs)
       | x == c = Right (x, xs)
-      | otherwise = Left $ "ParseChar failed {Left:" ++ xs ++ "}"
+      | otherwise = Left $ "ParseChar failed {Left: \"" ++ xs ++ "\"}"
     fct [] = Left "ParseChar failed: Empty or End of List"
 
 -- | -----------------------------------------------------------------------------------------------------------------
