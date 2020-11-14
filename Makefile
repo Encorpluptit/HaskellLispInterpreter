@@ -75,11 +75,12 @@ tests_run: re test func_tests
 
 sign:
 	@echo ""
-	@echo "*******************"
-	@echo "* Damien Bernard  *"
-	@echo "*                 *"
-	@echo "*  Epitech 2020   *"
-	@echo "*******************"
+	@echo "********************"
+	@echo "*  Damien Bernard  *"
+	@echo "*  Quentin Veyrenc *"
+	@echo "*                  *"
+	@echo "*   Epitech 2020   *"
+	@echo "********************"
 	@echo ""
 
 .PHONY : build build-dirty run install ghci test func_tests test-ghci ghcid dev-deps re clean fclean all
