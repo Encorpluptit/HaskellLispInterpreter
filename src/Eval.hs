@@ -18,6 +18,8 @@ eval env val@(ValBool _) = return (val, env)
 eval env val@(ValNum _) = return (val, env)
 eval env (ValList (Atom "define" : val)) = define env val
 eval env (ValList (Atom "cond" : val)) = cond env val
+eval env (ValList [Atom "#t", val]) =  evalBool env val isTrueExpr
+eval env (ValList [Atom "#f", val]) = evalBool env val isFalseExpr
 eval env (ValList [Atom "if", condition, validated, other]) = do
   condEvaluated <- eval env condition
   case condEvaluated of
@@ -123,3 +125,36 @@ getArgNames :: [Identifier] -> [LispVal] -> ThrowsError [Identifier]
 getArgNames acc [] = return acc
 getArgNames acc ((Atom ident) : exprs) = getArgNames (acc ++ [ident]) exprs
 getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `" ++ show expr ++ "` in lambda expression"
+
+
+-- TODO: Fix circle import AND FIX
+--cond :: [LispVal] -> ThrowsError LispVal
+--cond nature@((ValList [Atom a, validated]) : other)
+--    | a == "#t" = parseBool isTrueExpr
+--    | a == "#f" = parseBool isFalseExpr
+--    | otherwise = cond nature
+--        where
+--            parseBool fct = do
+--                res <- eval validated
+--                (if fct res then return res else cond other)
+--cond (ValList [condition, validated] : other) = do
+--  resEval <- eval condition
+--  res <- unpackBoolean "cond" resEval
+--  (if res then eval validated else cond other)
+--cond a = trace (show a) throw $ SyntaxError "Error in cond"
+
+evalBool :: Env -> LispVal -> (LispVal -> Bool) -> ThrowsError (LispVal, Env)
+evalBool env expr boolFct = do
+    (res, _) <- eval env expr
+    return (ValBool $ boolFct res, env)
+
+isTrueExpr :: LispVal -> Bool
+isTrueExpr (ValBool True)   = True
+isTrueExpr (ValList [])     = False
+isTrueExpr (ValNum 0)       = False
+isTrueExpr (ValNum _)       = True
+isTrueExpr (ValList _)      = True
+isTrueExpr _                = False
+
+isFalseExpr :: LispVal -> Bool
+isFalseExpr = not . isTrueExpr

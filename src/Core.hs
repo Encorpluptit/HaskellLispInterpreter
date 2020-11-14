@@ -21,11 +21,12 @@ import REPL
 --  * Print AST or Value if showTree option in Opts (Stored in printFct).
 halCore :: Opts -> [String] -> IO ()
 halCore opts@(Opts replOpt _) files
-  | replOpt = manageFiles >>= launchRepl printFct
+  | replOpt = manageFiles >>= launchRepl printer
   | otherwise = Control.Monad.void manageFiles
   where
-    manageFiles = processFiles printFct files emptyEnv
-    printFct = getPrintFct opts
+    manageFiles = processFiles filePrinter files emptyEnv
+    filePrinter = getPrintFct opts{repl=False}
+    printer = getPrintFct opts
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Process file list given in program arguments:
@@ -48,16 +49,23 @@ processFiles printFct (x : xs) env = do
 --  * showTree == False -> print value
 --  * showTree == True -> print Abstract Syntax Tree
 getPrintFct :: Opts -> (Env -> String -> IO Env)
-getPrintFct (Opts _ False) = printValue
-getPrintFct (Opts _ True) = printAST
+getPrintFct (Opts replOpt False) = printValue replOpt
+getPrintFct (Opts replOpt True) = printAST replOpt
 
-printValue :: Env -> String -> IO Env
-printValue env s = case unpackError $ parseExpr env s of
+printValue :: Bool -> Env -> String -> IO Env
+printValue replOpt env s = case unpackError $ parseExpr env s of
   Right (x, newEnv) -> (putStrLn . showVal) x >> return newEnv
---  Left err -> writeErrorAndExit err
-  Left err -> writeError err >> return env
+  Left err ->
+    ( if replOpt
+        then writeError err >> return env
+        else writeErrorAndExit err
+    )
 
-printAST :: Env -> String -> IO Env
-printAST env s = case runParser parseLispVal s of
+printAST :: Bool -> Env -> String -> IO Env
+printAST replOpt env s = case runParser parseLispVal s of
   Right (x, _) -> print x >> return env
-  Left err -> writeError err >> return env
+  Left err ->
+    ( if replOpt
+        then writeError err >> return env
+        else writeErrorAndExit err
+    )
