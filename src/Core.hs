@@ -35,10 +35,6 @@ halCore opts@(Opts replOpt _) files
 --  * Print AST or Value with showTree option in Opts.
 -- TODO: remove print and process in halCore ???
 processFiles :: (Env -> String -> IO Env) -> [String] -> Env -> IO Env
---processFiles printFct files = do
---  processedFiles <- getArgsFiles files
---  mapM_ printFct processedFiles
--- TODO [MARC]: Ask why this doesn't work ?
 processFiles _ [] env = return env
 processFiles printFct (x : xs) env = do
   file <- loadFile x

@@ -44,50 +44,50 @@ import Builtins
 import DataTypes
 import Errors
 
-newtype ValCtx = ValCtx (Map.Map Identifier LispVal)
+newtype EnvVar = EnvVar (Map.Map Identifier LispVal)
   deriving (Show)
 
-newtype FuncCtx = FuncCtx (Map.Map Identifier ([LispVal] -> ThrowsError LispVal))
+newtype EnvFunc = EnvFunc (Map.Map Identifier ([LispVal] -> ThrowsError LispVal))
 
-instance Show FuncCtx where
-  show (FuncCtx env) = show (Map.keys env)
+instance Show EnvFunc where
+  show (EnvFunc env) = show (Map.keys env)
 
 data Env = Env
-  { varsEnv :: ValCtx,
-    funcEnv :: FuncCtx
+  { varsEnv :: EnvVar,
+    funcEnv :: EnvFunc
   }
   deriving (Show)
 
 emptyEnv :: Env
-emptyEnv = Env {varsEnv = ValCtx Map.empty, funcEnv = FuncCtx $ Map.fromList builtins}
+emptyEnv = Env {varsEnv = EnvVar Map.empty, funcEnv = EnvFunc $ Map.fromList builtins}
 
 getSubEnv :: Env -> [(Identifier, LispVal)] -> Env
-getSubEnv (Env (ValCtx env) fenv) newEnv =
+getSubEnv (Env (EnvVar env) fenv) newEnv =
   Env
-    { varsEnv = ValCtx $ Map.union (Map.fromList newEnv) env,
+    { varsEnv = EnvVar $ Map.union (Map.fromList newEnv) env,
       funcEnv = fenv
     }
 
 addEnvVar :: Env -> Identifier -> LispVal -> Env
-addEnvVar (Env (ValCtx env) fenv) ident val =
+addEnvVar (Env (EnvVar env) fenv) ident val =
   Env
-    { varsEnv = ValCtx $ Map.insert ident val env,
+    { varsEnv = EnvVar $ Map.insert ident val env,
       funcEnv = fenv
     }
 
 getEnvVar :: Env -> Identifier -> ThrowsError (LispVal, Env)
-getEnvVar globalEnv@(Env (ValCtx env) _) ident = case Map.lookup ident env of
+getEnvVar globalEnv@(Env (EnvVar env) _) ident = case Map.lookup ident env of
   Nothing -> throw $ UnboundVar ident
   Just a -> return (a, globalEnv)
 
 addEnvFunc :: Env -> Identifier -> ([LispVal] -> ThrowsError LispVal) -> Env
-addEnvFunc (Env varenv (FuncCtx env)) ident val =
+addEnvFunc (Env varenv (EnvFunc env)) ident val =
   Env
     { varsEnv = varenv,
-      funcEnv = FuncCtx $ Map.insert ident val env
+      funcEnv = EnvFunc $ Map.insert ident val env
     }
 
 getEnvFunc :: Env -> Identifier -> ThrowsError ([LispVal] -> ThrowsError LispVal)
-getEnvFunc (Env _ (FuncCtx env)) ident = case Map.lookup ident env of
+getEnvFunc (Env _ (EnvFunc env)) ident = case Map.lookup ident env of
   Nothing -> throw $ UnboundVar ident
   Just a -> return a

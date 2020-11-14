@@ -18,8 +18,8 @@ eval env val@(ValBool _) = return (val, env)
 eval env val@(ValNum _) = return (val, env)
 eval env (ValList (Atom "define" : val)) = define env val
 eval env (ValList (Atom "cond" : val)) = cond env val
-eval env (ValList [Atom "#t", val]) =  evalBool env val isTrueExpr
-eval env (ValList [Atom "#f", val]) = evalBool env val isFalseExpr
+--eval env (ValList [Atom "#t", val]) = evalBool env val isTrueExpr
+--eval env (ValList [Atom "#f", val]) = evalBool env val isFalseExpr
 eval env (ValList [Atom "if", condition, validated, other]) = do
   condEvaluated <- eval env condition
   case condEvaluated of
@@ -85,17 +85,41 @@ apply func env args = do
 --    evalFunc env result args
 
 -- TODO: Fix circle import AND FIX
-cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
-cond env (ValList [condition, validated] : other) = do
-  (resEval, _) <- eval env condition
-  res <- unpackBoolean "cond" resEval
-  result res
-  where
-    result res = if res then eval env validated else cond env other
---        where result resEval = if unpackBoolean "cond" resEval then eval validated else cond other
+--cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+--cond env (ValList [condition, validated] : other) = do
+--  (resEval, _) <- eval env (ValList [condition, validated])
+--  res <- unpackBoolean "cond" resEval
+--  result res
+--  where
+--    result res = if res then eval env validated else cond env other
+--cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
+--cond _ _ = throw $ SyntaxError "Error in cond"
+--cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+--cond env (ValList [condition, validated] : other) = do
+--  (resEval, _) <- eval env condition
+--  res <- unpackBoolean "cond" resEval
+--  result res
+--  where
+--    result res = if res then eval env validated else cond env other
+--cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
+--cond _ _ = throw $ SyntaxError "Error in cond"
 
-cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
-cond _ _ = throw $ SyntaxError "Error in cond"
+cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+cond env nature@((ValList [Atom a, validated]) : other)
+    | a == "#t" = parseBool isTrueExpr
+    | a == "#f" = parseBool isFalseExpr
+    | otherwise = cond env nature
+        where
+            parseBool fct = do
+                (res, newEnv) <- eval env validated
+                (if fct res then return (res, newEnv) else cond env other)
+cond env (ValList [condition, validated] : other) = do
+  (resEval, newEnv) <- eval env condition
+  res <- unpackBoolean "cond" resEval
+  (if res then eval newEnv validated else cond env other)
+-- TODO: change Error ?
+cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
+
 
 -- | define keyword used for creating global variable name bindings. This
 --  operation may overwrite existing bindings, if present.
@@ -126,7 +150,6 @@ getArgNames acc [] = return acc
 getArgNames acc ((Atom ident) : exprs) = getArgNames (acc ++ [ident]) exprs
 getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `" ++ show expr ++ "` in lambda expression"
 
-
 -- TODO: Fix circle import AND FIX
 --cond :: [LispVal] -> ThrowsError LispVal
 --cond nature@((ValList [Atom a, validated]) : other)
@@ -145,16 +168,16 @@ getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `"
 
 evalBool :: Env -> LispVal -> (LispVal -> Bool) -> ThrowsError (LispVal, Env)
 evalBool env expr boolFct = do
-    (res, _) <- eval env expr
-    return (ValBool $ boolFct res, env)
+  (res, _) <- eval env expr
+  return (ValBool $ boolFct res, env)
 
 isTrueExpr :: LispVal -> Bool
-isTrueExpr (ValBool True)   = True
-isTrueExpr (ValList [])     = False
-isTrueExpr (ValNum 0)       = False
-isTrueExpr (ValNum _)       = True
-isTrueExpr (ValList _)      = True
-isTrueExpr _                = False
+isTrueExpr (ValBool True) = True
+isTrueExpr (ValList []) = False
+isTrueExpr (ValNum 0) = False
+isTrueExpr (ValNum _) = True
+isTrueExpr (ValList _) = True
+isTrueExpr _ = False
 
 isFalseExpr :: LispVal -> Bool
 isFalseExpr = not . isTrueExpr

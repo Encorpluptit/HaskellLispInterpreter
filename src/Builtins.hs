@@ -202,6 +202,7 @@ cons args = throw $ NbArgsError "const" 1 args
 -- Equals
 -- TODO: [BONUS] Manage "equal?" built-in ? Weak type checking
 equal :: [LispVal] -> ThrowsError LispVal
+equal [Atom a, Atom b]              = return $ ValBool $ a == b
 equal [ValNum a, ValNum b]          = return $ ValBool $ a == b
 equal [ValBool a, ValBool b]        = return $ ValBool $ a == b
 equal [ValString a, ValString b]    = return $ ValBool $ a == b
