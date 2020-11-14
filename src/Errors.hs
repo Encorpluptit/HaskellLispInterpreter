@@ -24,6 +24,7 @@ data HALError
   -- | NotFunction   String          -- (foo 1)       { (define foo 0) }
   | KeywordError LispVal -- Useful with unbound Var ?
   | SyntaxError String -- (define foo 0
+    deriving (Eq)
   -- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
 instance Show HALError where
@@ -44,7 +45,7 @@ showHALError (SyntaxError msg) = msg
 showHALError (KeywordError val) = "KeyWord Error, got : " ++ show val
 
 newtype ThrowsError a = HandleError (Either HALError a)
-  deriving (Show)
+  deriving (Show, Eq)
 
 instance Functor ThrowsError where
   fmap _ (HandleError (Left err)) = HandleError $ Left err

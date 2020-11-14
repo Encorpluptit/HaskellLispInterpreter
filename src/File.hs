@@ -2,6 +2,7 @@ module File where
 
 import Control.Exception
 import PrintUtils
+import GHC.IO.Exception (ioe_description, ioe_filename, ioe_location)
 
 loadFile :: String -> IO String
 loadFile fp = do
@@ -12,7 +13,7 @@ loadFile fp = do
         Right content -> return content
     where
         handler :: IOError -> Maybe String
-        handler err = Just "can't read file."
+        handler err = Just $ show err
 
 getArgsFiles :: [String] -> IO [String]
 getArgsFiles = mapM loadFile

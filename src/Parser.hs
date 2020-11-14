@@ -9,7 +9,6 @@ import DataTypes
 import Errors
 import Eval
 import LibParsing
-import Builtins
 import Environment
 
 parseExpr :: Env -> String -> ThrowsError (LispVal, Env)

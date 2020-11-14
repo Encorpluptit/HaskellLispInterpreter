@@ -1,6 +1,7 @@
 module Builtins
 (
     getBuiltins
+    , builtins
   , unpackBoolean
 )
 where
