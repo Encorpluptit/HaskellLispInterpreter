@@ -5,13 +5,12 @@ where
 
 import Control.Monad (void)
 import DataTypes
-import Environment
-import Errors
 import File
 import LibParsing
 import Options
 import Parser
 import PrintUtils
+import Builtins
 import REPL
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -24,9 +23,10 @@ halCore opts@(Opts replOpt _) files
   | replOpt = manageFiles >>= launchRepl printer
   | otherwise = Control.Monad.void manageFiles
   where
-    manageFiles = processFiles filePrinter files emptyEnv
+    manageFiles = processFiles filePrinter files baseEnv
     filePrinter = getPrintFct opts{repl=False}
     printer = getPrintFct opts
+    baseEnv = addEnvFuncList emptyEnv builtins
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Process file list given in program arguments:

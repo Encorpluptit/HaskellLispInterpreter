@@ -8,16 +8,17 @@ import Data.List (genericLength)
 import DataTypes
 import Debug.Trace
 import Environment
-import Errors
+import HalError
+import HalErrorsMonad
 
 eval :: Env -> LispVal -> ThrowsError (LispVal, Env)
-eval env (Atom ident) = getEnvVar env ident
+--eval env (Atom ident) = getEnvVar env ident
 eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env val@(ValString _) = return (val, env)
 eval env val@(ValBool _) = return (val, env)
 eval env val@(ValNum _) = return (val, env)
-eval env (ValList (Atom "define" : val)) = define env val
-eval env (ValList (Atom "cond" : val)) = cond env val
+eval env (ValList (Atom "define" : args)) = define env args
+eval env (ValList (Atom "cond" : args)) = cond env args
 --eval env (ValList [Atom "#t", val]) = evalBool env val isTrueExpr
 --eval env (ValList [Atom "#f", val]) = evalBool env val isFalseExpr
 eval env (ValList [Atom "if", condition, validated, other]) = do
@@ -26,63 +27,38 @@ eval env (ValList [Atom "if", condition, validated, other]) = do
     (ValBool True, newEnv) -> eval newEnv validated
     _ -> eval env other
 -- TODO: check env here
---eval env (ValList (Atom func : args)) = mapM (eval env) args >>= apply func env . map fst
-eval env (ValList (Atom func : args)) = mapM (eval env) args >>= apply func env . map fst
+eval env (ValList (Atom "lambda" : args)) = lambda env args
+--eval env (ValList (Atom func : args)) = trace (show env) mapM (eval env) args >>= apply func env . map fst
+eval env (ValList (func : args)) = evalFunc env (ValList (func : args))
 eval _ syntaxError = throw $ KeywordError syntaxError
 
+evalFunc' :: Env -> LispVal -> [LispVal] -> ThrowsError (LispVal, Env)
+evalFunc' env (Func closure (LispFct f)) args = do
+  result <- f (mergeEnvs env closure) args
+  return (result, env)
+evalFunc' _ notFunc _ = throw $ NotFunction "Cannot evaluate" notFunc
+
+evalFunc :: Env -> LispVal -> ThrowsError (LispVal, Env)
+evalFunc env (ValList (headExpr : argExprs)) = do
+  (result, _) <- eval env headExpr
+  args <- evalArgs [] env argExprs
+  evalFunc' env result args
+evalFunc _ notFunc = throw $ NotFunction "Cannot evaluate" notFunc
+
 -- | -----------------------------------------------------------------------------------------------------------------
--- * lookup:
--- http://zvon.org/other/haskell/Outputprelude/lookup_f.html
--- apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
 apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
---
----- | Equivalents:
---apply func env args = case Map.lookup func (toMap env) of
---    Just funcToApply    -> do
---        res <- ($args) funcToApply
---        return (res, env)
---    Nothing -> throw $ BuiltinError func args
---apply func env args = case Map.lookup func (toMap env) of
---    Just funcToApply    -> do
---        res <- ($args) funcToApply
---        return (res, env)
---    Nothing -> case Map.lookup func (toMap env) of
---        Just val    ->  return (val ,env)
---        Nothing     ->  throw $ UnboundVar func
 apply func env args = do
-  fct <- trace (show args) getEnvFunc env func
+  --  fct <- trace (show args) getEnvFunc env func
+  fct <- getEnvFunc env func
   res <- fct args
   return (res, env)
 
---apply func env args =
---  maybe
---    (throw $ BuiltinError func args)
---    ($ args)
---    (lookup func builtins)
-
---evalArgExprsRecurse :: [HData] -> Env -> [Expr] -> ThrowsError [HData]
---evalArgExprsRecurse acc env [] = return acc
---evalArgExprsRecurse acc env (expr:exprs) = do
---    (result, _) <- evalExpr env expr
---    evalArgExprsRecurse (acc ++ [result]) env exprs
---    -- Ignoring any new environment, since hasp expressions cannot affect
---    -- name bindings at a higher-level scope, apart from define, which is
---    -- valid only as a top-level expression.
---
---evalArgExprs :: Env -> [Expr] -> ThrowsError [HData]
---evalArgExprs = evalArgExprsRecurse []
---
---evalFunc :: Env -> HData -> [HData] -> ThrowsError (HData, Env)
---evalFunc env (HFunc closure f) args = do
---    result <- f (Env $ Map.union (toMap env) (toMap closure)) args
---    return (result, env)
---evalFunc _ notFunc _ = throw . TypeError $ "Cannot evaluate `" ++ show notFunc ++ "`"
---
---evalFuncCall :: Env -> Expr -> ThrowsError (HData, Env)
---evalFuncCall env (List (headExpr:argExprs)) = do
---    (result, _) <- evalExpr env headExpr
---    args <- evalArgExprs env argExprs
---    evalFunc env result args
+-- TODO: refacto
+evalArgs :: [LispVal] -> Env -> [LispVal] -> ThrowsError [LispVal]
+evalArgs acc _ [] = return acc
+evalArgs acc env (first : left) = do
+  (result, _) <- eval env first
+  evalArgs (acc ++ [result]) env left
 
 -- TODO: Fix circle import AND FIX
 --cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
@@ -102,24 +78,23 @@ apply func env args = do
 --  where
 --    result res = if res then eval env validated else cond env other
 --cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
---cond _ _ = throw $ SyntaxError "Error in cond"
+--cond _ _ = throw $ SyntaxError "Error in cond"0
 
 cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 cond env nature@((ValList [Atom a, validated]) : other)
-    | a == "#t" = parseBool isTrueExpr
-    | a == "#f" = parseBool isFalseExpr
-    | otherwise = cond env nature
-        where
-            parseBool fct = do
-                (res, newEnv) <- eval env validated
-                (if fct res then return (res, newEnv) else cond env other)
+  | a == "#t" = parseBool isTrueExpr
+  | a == "#f" = parseBool isFalseExpr
+  | otherwise = cond env nature
+  where
+    parseBool fct = do
+      (res, newEnv) <- eval env validated
+      (if fct res then return (res, newEnv) else cond env other)
 cond env (ValList [condition, validated] : other) = do
   (resEval, newEnv) <- eval env condition
   res <- unpackBoolean "cond" resEval
   (if res then eval newEnv validated else cond env other)
 -- TODO: change Error ?
 cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
-
 
 -- | define keyword used for creating global variable name bindings. This
 --  operation may overwrite existing bindings, if present.
@@ -141,30 +116,15 @@ define envMap [ValList (Atom name : args), body] = do
         (res, _) <- eval (internEnv argNames) body
         return res
       where
-        internEnv argNames = getSubEnv envMap (zip argNames callArgs)
+        internEnv argNames = addVarsToEnv envMap (zip argNames callArgs)
 define _ [_, _] = throw $ SyntaxError "define (define <name> <expr>)"
 define _ args = throw $ NbArgsError "define" 2 args
 
+-- TODO: refacto
 getArgNames :: [Identifier] -> [LispVal] -> ThrowsError [Identifier]
-getArgNames acc [] = return acc
+getArgNames acc [] = trace (show acc) return acc
 getArgNames acc ((Atom ident) : exprs) = getArgNames (acc ++ [ident]) exprs
 getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `" ++ show expr ++ "` in lambda expression"
-
--- TODO: Fix circle import AND FIX
---cond :: [LispVal] -> ThrowsError LispVal
---cond nature@((ValList [Atom a, validated]) : other)
---    | a == "#t" = parseBool isTrueExpr
---    | a == "#f" = parseBool isFalseExpr
---    | otherwise = cond nature
---        where
---            parseBool fct = do
---                res <- eval validated
---                (if fct res then return res else cond other)
---cond (ValList [condition, validated] : other) = do
---  resEval <- eval condition
---  res <- unpackBoolean "cond" resEval
---  (if res then eval validated else cond other)
---cond a = trace (show a) throw $ SyntaxError "Error in cond"
 
 evalBool :: Env -> LispVal -> (LispVal -> Bool) -> ThrowsError (LispVal, Env)
 evalBool env expr boolFct = do
@@ -181,3 +141,27 @@ isTrueExpr _ = False
 
 isFalseExpr :: LispVal -> Bool
 isFalseExpr = not . isTrueExpr
+
+-- | lambda keyword for creating anonymous functions within Lisp code. This
+--  includes an (admittedly rudimentary) implementation of closures, in the sense
+--  that the environment in which an anonymous function is created is stored
+--  in the function returned by lambda.
+--
+--  Syntax: (lambda (<arg-ids> ...) <expr>)
+lambda :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+lambda _ [] = throw $ NbArgsError "lambda" 2 []
+lambda _ [a] = throw $ NbArgsError "lambda" 2 [a]
+lambda env [ValList argExprs, expr] = do
+  argNames <- getArgNames [] argExprs
+  return (Func env $ LispFct $ lambda' env argNames expr, env)
+lambda _ [_, _] = throw $ SyntaxError "(lambda (<arg-ids> ...) <expr>"
+lambda _ args = throw $ NbArgsError "lambda" 2 args
+
+lambda' :: Env -> [Identifier] -> LispVal -> (Env -> [LispVal] -> ThrowsError LispVal)
+lambda' env argNames expr callerEnv args
+  | length argNames /= length args = trace (show argNames) throw $ NbArgsError "#<procedure>" (genericLength args) args
+  | otherwise = do
+    (result, _) <- eval internEnv expr
+    return result
+  where
+    internEnv = mergeEnvs (addVarsToEnv env (zip argNames args)) callerEnv

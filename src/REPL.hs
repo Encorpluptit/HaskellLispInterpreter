@@ -3,7 +3,7 @@ module REPL where
 import Data.List (isPrefixOf)
 import System.Console.Haskeline
 import Control.Monad.IO.Class
-import Environment
+import DataTypes
 import Debug.Trace
 
 -- | -----------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,8 @@ where
 
 import Control.Applicative
 import DataTypes
-import Errors
+import HalError
+import HalErrorsMonad
 import Eval
 import LibParsing
 import Environment

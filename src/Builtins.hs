@@ -7,7 +7,6 @@ module Builtins
 where
 
 import DataTypes
-import Errors
 
 -- | TODO: ??
 --import Environment
@@ -32,15 +31,14 @@ builtins = [
     ("+", numericBinaryOp "+" (+)),
     ("-", numericBinaryOp "-" (-)),
     ("*", numericBinaryOp "*" (*)),
+--    TODO: != func for mod and div (take only 2 args but here can manage with many
     ("div", numericBinaryOp "div" div),
---    TODO: != func for mod (take only 2 args but here can manage with many
     ("mod", numericBinaryOp "mod" mod),
     ("<", numericBoolExpr "<" (<)),
     ("atom?", unaryOp "atom?" isAtom),
     ("car", car),
     ("cdr", cdr),
     ("cons", cons),
---    ("cond", cond),
     ("eq?", equal),
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Bonuses:
@@ -64,6 +62,7 @@ builtins = [
     ("string<=?", stringBoolExpr "string=?" (<=)),
     ("string>=?", stringBoolExpr "string=?" (>=)),
     ("string-length", stringLength)
+    ]
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Add the following built-ins:
 --  * More list built-ins (pair, ...):
@@ -76,7 +75,6 @@ builtins = [
 --  * foldl (Haskell reference)
 --  * foldl1 (On more function and lambdas, already managed for op like (+), (-))
 
-    ]
 
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -178,14 +176,17 @@ stringBoolExpr procedure = boolBinaryOp procedure (unpackString procedure)
 
 
 -- | -----------------------------------------------------------------------------------------------------------------
--- Operations On list
--- TODO: Manage list with dot notation ('.') here or before ?
+-- Takes a cons as argument, returns its first element (the car).
+-- TODO: Improve Doc (with Example ??)
 car :: [LispVal] -> ThrowsError LispVal
 car [ValList (x:_)] = return x
 car [ValDottedList (x:_) _] = return x
 car [val] = throw $ TypeError "Incorrect Value Type when applying car" val
 car args = throw $ NbArgsError "car" 1 args
 
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Takes a cons as argument, returns its second element (the cdr).
+-- TODO: Improve Doc (with Example ??)
 cdr :: [LispVal] -> ThrowsError LispVal
 cdr [ValList (_:xs)] = return $ ValList xs
 cdr [ValDottedList [_] x] = return x
@@ -193,10 +194,12 @@ cdr [ValDottedList (_:xs) x] = return $ ValDottedList xs x
 cdr [val] = throw $ TypeError "Incorrect Value Type when applying cdr" val
 cdr args = throw $ NbArgsError "cdr" 1 args
 
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Takes two arguments, construct a new list cell with the first argument in the first place (car) and the second
+-- argument is the second place (cdr).
+-- TODO: Improve Doc (with Example ??)
 cons :: [LispVal] -> ThrowsError LispVal
 cons [x, ValList []] = return $ ValList [x]
--- TODO: Nil Choice
---cons [x, Nil]        = return $ ValList [x]
 cons [x, ValList xs] = return $ ValList (x:xs)
 cons [x, ValDottedList xs end] = return $ ValDottedList (x:xs) end
 cons [a, b] = return $ ValDottedList [a] b
