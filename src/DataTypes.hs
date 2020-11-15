@@ -5,8 +5,6 @@ module DataTypes
     HALError(..),
     ThrowsError(..),
     LispFct(..),
-    SyntacticKeyword(..),
-    SKMap(..),
     showVal,
     throw,
     unpackError,
@@ -126,7 +124,7 @@ unpackError (HandleError val) = val
 newtype LispFct = LispFct (Env -> [LispVal] -> ThrowsError LispVal)
 
 instance Show LispFct where
-    show _ = ""
+    show _ = "#<procedure>"
 
 data LispVal
   = Atom String
@@ -135,12 +133,17 @@ data LispVal
   | ValNum Integer
   | ValBool Bool
   | ValString String
-  -- | Func (LispVal -> ThrowsError LispVal)
-  -- | Func ([LispVal] -> ThrowsError LispVal))
---  | Func Env (Env -> [LispVal] -> ThrowsError LispVal)
   | Func Env LispFct
-  -- | Lambda IFunc EnvCtx
-  deriving (Show)
+--  deriving (Show)
+
+instance Show LispVal where
+    show (Atom name) = "Atom  \"" ++ name ++ "\""
+    show (ValNum num) = "ValNum " ++ show num
+    show (ValList lst) = "Vallst " ++ show bool
+    show (ValBool bool) = "ValNum " ++ show bool
+    show (ValString str) = "ValNum \"" ++ str ++ "\""
+    show (Func _ func) = "Func {Intern Env} " ++ show func
+    show val = show val
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Double, rational, etc. implementation via LispNum ?
@@ -180,9 +183,17 @@ newtype EnvVar = EnvVar (Map.Map Identifier LispVal)
   deriving (Show)
 
 newtype Env = Env (Map.Map Identifier LispVal)
+--
+--instance Show Env where
+--  show (Env env) = "Env : " ++ show (Map.keys env)
 
 instance Show Env where
-  show (Env env) = "Env : " ++ show (Map.keys env)
+    show (Env env) = "Env: " ++ envMap
+        where
+            keys = Map.keys env
+            envMap
+                | not (null keys) = foldl1 (++) (map (("\n\t" ++) . show) (Map.toList env))
+                | otherwise = "[Empty]"
 
 emptyEnv :: Env
 emptyEnv = Env Map.empty
@@ -205,8 +216,3 @@ getEnvVar' :: Env -> Identifier -> ThrowsError LispVal
 getEnvVar' (Env env) ident = case Map.lookup ident env of
   Nothing -> throw $ UnboundVar ident
   Just a -> return a
-
--- SK <top-level-only> <operation>
-newtype SyntacticKeyword = SK (Env -> [LispVal] -> ThrowsError (LispVal, Env))
-
-type SKMap = Map.Map Identifier SyntacticKeyword

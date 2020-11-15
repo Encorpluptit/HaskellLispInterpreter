@@ -9,8 +9,6 @@ where
 import DataTypes
 
 -- | TODO: ??
---import Environment
---import qualified Data.Map as Map
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Scheme Reference:

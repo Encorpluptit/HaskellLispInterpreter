@@ -4,14 +4,10 @@ module Eval
 where
 
 import Control.Applicative
-import qualified Data.Map as Map
 import Data.List (genericLength)
 import Builtins
 import DataTypes
 import Debug.Trace
-import Environment
-import HalError
-import HalErrorsMonad
 
 eval :: Env -> LispVal -> ThrowsError (LispVal, Env)
 eval env val@(ValString _) = return (val, env)
@@ -21,23 +17,19 @@ eval env (Atom ident) = evalAtom env ident
 eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env (ValList (Atom "define" : args)) = define env args
 eval env (ValList (Atom "cond" : args)) = cond env args
-eval env (ValList [Atom "if", condition, validated, other]) = do
-  condEvaluated <- eval env condition
-  case condEvaluated of
-    (ValBool True, newEnv) -> eval newEnv validated
-    _ -> eval env other
--- TODO: check env here
+eval env (ValList (Atom "if" : args)) = ifStatement env args
+--eval env (ValList [Atom "if", condition, validated, other]) = do
+--  condEvaluated <- eval env condition
+--  case condEvaluated of
+--    (ValBool True, newEnv) -> eval newEnv validated
+--    _ -> eval env other
 eval env (ValList (Atom "lambda" : args)) = lambda env args
 --eval env (ValList (Atom func : args)) = trace (show env) mapM (eval env) args >>= apply func env . map fst
 eval env (ValList (func : args)) = evalFunc env (ValList (func : args))
 eval _ syntaxError = throw $ KeywordError syntaxError
 
-evalFunc' :: Env -> LispVal -> [LispVal] -> ThrowsError (LispVal, Env)
-evalFunc' env (Func closure (LispFct f)) args = do
-  result <- f (mergeEnvs env closure) args
-  return (result, env)
-evalFunc' _ notFunc _ = throw $ NotFunction "Cannot evaluate" notFunc
-
+-- | -----------------------------------------------------------------------------------------------------------------
+--
 evalFunc :: Env -> LispVal -> ThrowsError (LispVal, Env)
 evalFunc env (ValList (headExpr : argExprs)) = do
   (result, _) <- eval env headExpr
@@ -46,6 +38,18 @@ evalFunc env (ValList (headExpr : argExprs)) = do
 evalFunc _ notFunc = throw $ NotFunction "Cannot evaluate" notFunc
 
 -- | -----------------------------------------------------------------------------------------------------------------
+-- Ignoring any new environment, since Lisp expressions cannot affect name bindings at a higher-level scope,
+-- apart from define, which is valid only as a top-level expression.
+evalFunc' :: Env -> LispVal -> [LispVal] -> ThrowsError (LispVal, Env)
+evalFunc' env (Func closure (LispFct f)) args = do
+  result <- f (mergeEnvs env closure) args
+  return (result, env)
+evalFunc' _ notFunc _ = throw $ NotFunction "Cannot evaluate" notFunc
+
+
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Old evaluation function, kept for refactoring later
 apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
 apply func env args = case lookup func builtins of
     Just f -> do
@@ -53,6 +57,8 @@ apply func env args = case lookup func builtins of
         return (res, env)
     Nothing -> throw $ NotFunction "Cannot evaluate" (Atom func)
 
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Get Variable from env (Value or Func) or search in builtins
 evalAtom :: Env -> Identifier -> ThrowsError (LispVal, Env)
 evalAtom env ident = getEnvVar env ident <|> getBuiltins env ident
 
@@ -63,26 +69,14 @@ evalArgs acc env (first : left) = do
   (result, _) <- eval env first
   evalArgs (acc ++ [result]) env left
 
--- TODO: Fix circle import AND FIX
---cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
---cond env (ValList [condition, validated] : other) = do
---  (resEval, _) <- eval env (ValList [condition, validated])
---  res <- unpackBoolean "cond" resEval
---  result res
---  where
---    result res = if res then eval env validated else cond env other
---cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
---cond _ _ = throw $ SyntaxError "Error in cond"
---cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
---cond env (ValList [condition, validated] : other) = do
---  (resEval, _) <- eval env condition
---  res <- unpackBoolean "cond" resEval
---  result res
---  where
---    result res = if res then eval env validated else cond env other
---cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
---cond _ _ = throw $ SyntaxError "Error in cond"
-
+-- | -----------------------------------------------------------------------------------------------------------------
+--  Allows to conditionally evaluate expressions. It takes a variable number of arguments.
+--  Each argument is a list. “cond” successively evaluates the first element of each list.
+--  If its return value is true, it evaluates the second element of the list and returns it’s value.
+--  Otherwise, it tries the next expression.
+--
+--  Syntax: (cond <expr> <expr> ...)
+-- TODO: getNewEnv for each eval ? (nested envs ?)
 cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 cond env nature@((ValList [Atom a, validated]) : other)
   | a == "#t" = parseBool isTrueExpr
@@ -90,31 +84,18 @@ cond env nature@((ValList [Atom a, validated]) : other)
   | otherwise = cond env nature
   where
     parseBool fct = do
-      (res, newEnv) <- eval env validated
-      (if fct res then return (res, newEnv) else cond env other)
+      (res, _) <- eval env validated
+      (if fct res then return (res, env) else cond env other)
 cond env (ValList [condition, validated] : other) = do
-  (resEval, newEnv) <- eval env condition
+  (resEval, _) <- eval env condition
   res <- unpackBoolean "cond" resEval
-  (if res then eval newEnv validated else cond env other)
+  (if res then eval env validated else cond env other)
 -- TODO: change Error ?
 cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
 
 
-
-defaultSK :: SKMap
-defaultSK = Map.fromList
-    [
-    ("define", SK define)
-    , ("lambda", SK lambda)
---    , ("if", SK ifStmt)
---    , ("apply", SK applyHFunc)
---    , ("and", SK boolAnd)
---    , ("or", SK boolOr)
---    , ("let", SK letStmt)
-    ]
-
-
--- | define keyword used for creating global variable name bindings. This
+-- | -----------------------------------------------------------------------------------------------------------------
+--  define keyword used for creating global variable name bindings. This
 --  operation may overwrite existing bindings, if present.
 --
 --  Syntax: (define <name> <expr>)
@@ -123,7 +104,7 @@ define _ [] = throw $ NbArgsError "define" 2 []
 define _ [a] = throw $ NbArgsError "define" 2 [a]
 define env [Atom name, expr] = do
     (result, _) <- eval env expr
-    return (Atom name, addEnvVar env name result)
+    trace (show env) return (Atom name, addEnvVar env name result)
 define env [ValList (Atom name : args), body] = do
   return (Atom name, addEnvVar env name (Func env (LispFct fct)))
   where
@@ -135,17 +116,6 @@ define env [ValList (Atom name : args), body] = do
         return res
       where
         composeEnv argNames = addVarsToEnv internEnv (zip argNames callArgs)
---define envMap [ValList (Atom name : args), body] = do
---  return (Atom name, addEnvFunc envMap name fct)
---  where
---    fct callArgs
---      | length callArgs /= length args = throw $ NbArgsError name (genericLength args) callArgs
---      | otherwise = do
---        argNames <- getArgNames [] args
---        (res, _) <- eval (internEnv argNames) body
---        return res
---      where
---        internEnv argNames = addVarsToEnv envMap (zip argNames callArgs)
 define _ [_, _] = throw $ SyntaxError "define (define <name> <expr>)"
 define _ args = throw $ NbArgsError "define" 2 args
 
@@ -155,23 +125,8 @@ getArgNames acc [] = trace (show acc) return acc
 getArgNames acc ((Atom ident) : exprs) = getArgNames (acc ++ [ident]) exprs
 getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `" ++ show expr ++ "` in lambda expression"
 
-evalBool :: Env -> LispVal -> (LispVal -> Bool) -> ThrowsError (LispVal, Env)
-evalBool env expr boolFct = do
-  (res, _) <- eval env expr
-  return (ValBool $ boolFct res, env)
-
-isTrueExpr :: LispVal -> Bool
-isTrueExpr (ValBool True) = True
-isTrueExpr (ValList []) = False
-isTrueExpr (ValNum 0) = False
-isTrueExpr (ValNum _) = True
-isTrueExpr (ValList _) = True
-isTrueExpr _ = False
-
-isFalseExpr :: LispVal -> Bool
-isFalseExpr = not . isTrueExpr
-
--- | lambda keyword for creating anonymous functions within Lisp code. This
+-- | -----------------------------------------------------------------------------------------------------------------
+--  lambda keyword for creating anonymous functions within Lisp code. This
 --  includes an (admittedly rudimentary) implementation of closures, in the sense
 --  that the environment in which an anonymous function is created is stored
 --  in the function returned by lambda.
@@ -194,3 +149,31 @@ lambda' env argNames expr callerEnv args
     return result
   where
     internEnv = mergeEnvs (addVarsToEnv env (zip argNames args)) callerEnv
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- if statement that evaluates the first argument. If the condition evaluates
+-- to true, then the then-expression is evaluated and its result returned,
+-- otherwise the else-expression is evaluated and its result is returned.
+--
+-- Syntax: (if <cond> <then-expr> <else-expr>)
+ifStatement :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+ifStatement env [condition, validated, other] = do
+  condEvaluated <- eval env condition
+  case condEvaluated of
+    (ValBool True, newEnv) -> eval newEnv validated
+    _ -> eval env other
+ifStatement _ a = throw $ NbArgsError "if" 3 a
+
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Boolean helpers used in cond to not define this at top-level
+isTrueExpr :: LispVal -> Bool
+isTrueExpr (ValBool True) = True
+isTrueExpr (ValList []) = False
+isTrueExpr (ValNum 0) = False
+isTrueExpr (ValNum _) = True
+isTrueExpr (ValList _) = True
+isTrueExpr _ = False
+
+isFalseExpr :: LispVal -> Bool
+isFalseExpr = not . isTrueExpr
