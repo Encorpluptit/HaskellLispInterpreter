@@ -1,20 +1,20 @@
 module DataTypes
   ( LispVal (..),
-    showVal,
     Identifier,
     Env(..),
     HALError(..),
     ThrowsError(..),
     LispFct(..),
+    SyntacticKeyword(..),
+    SKMap(..),
+    showVal,
     throw,
     unpackError,
-    addEnvFuncList,
     emptyEnv,
     addVarsToEnv,
     addEnvVar,
     getEnvVar,
-    addEnvFunc,
-    getEnvFunc,
+    getEnvVar',
     mergeEnvs
   )
 where
@@ -179,61 +179,34 @@ unwordsListVal list = unwords $ showVal <$> list
 newtype EnvVar = EnvVar (Map.Map Identifier LispVal)
   deriving (Show)
 
-newtype EnvFunc = EnvFunc (Map.Map Identifier ([LispVal] -> ThrowsError LispVal))
+newtype Env = Env (Map.Map Identifier LispVal)
 
-instance Show EnvFunc where
-  show (EnvFunc env) = show (Map.keys env)
-
-data Env = Env
-  { varsEnv :: EnvVar,
-    funcEnv :: EnvFunc
-  }
-  deriving (Show)
+instance Show Env where
+  show (Env env) = "Env : " ++ show (Map.keys env)
 
 emptyEnv :: Env
-emptyEnv = Env {varsEnv = EnvVar Map.empty, funcEnv = EnvFunc Map.empty}
+emptyEnv = Env Map.empty
 
 addVarsToEnv :: Env -> [(Identifier, LispVal)] -> Env
-addVarsToEnv (Env (EnvVar env) fenv) newEnv =
-  Env
-    { varsEnv = EnvVar $ Map.union (Map.fromList newEnv) env,
-      funcEnv = fenv
-    }
+addVarsToEnv (Env env) newEnv = Env $ Map.union (Map.fromList newEnv) env
 
 mergeEnvs :: Env -> Env -> Env
-mergeEnvs (Env (EnvVar envVar1) (EnvFunc envFunc1)) (Env (EnvVar envVar2) (EnvFunc envFunc2)) =
-    Env
-      { varsEnv = EnvVar $ Map.union envVar1 envVar2,
-        funcEnv = EnvFunc $ Map.union envFunc1 envFunc2
-      }
+mergeEnvs (Env env1) (Env env2) = Env $ Map.union env1 env2
 
 addEnvVar :: Env -> Identifier -> LispVal -> Env
-addEnvVar (Env (EnvVar env) fenv) ident val =
-  Env
-    { varsEnv = EnvVar $ Map.insert ident val env,
-      funcEnv = fenv
-    }
+addEnvVar (Env env) ident val = Env $ Map.insert ident val env
 
 getEnvVar :: Env -> Identifier -> ThrowsError (LispVal, Env)
-getEnvVar globalEnv@(Env (EnvVar env) _) ident = case Map.lookup ident env of
+getEnvVar globalEnv@(Env env) ident = case Map.lookup ident env of
   Nothing -> throw $ UnboundVar ident
   Just a -> return (a, globalEnv)
 
-addEnvFunc :: Env -> Identifier -> ([LispVal] -> ThrowsError LispVal) -> Env
-addEnvFunc (Env varenv (EnvFunc env)) ident val =
-  Env
-    { varsEnv = varenv,
-      funcEnv = EnvFunc $ Map.insert ident val env
-    }
-
-addEnvFuncList :: Env -> [(String, [LispVal] -> ThrowsError LispVal)] -> Env
-addEnvFuncList (Env varenv (EnvFunc env)) list =
-  Env
-    { varsEnv = varenv,
-      funcEnv = EnvFunc $ Map.union env (Map.fromList list)
-    }
-
-getEnvFunc :: Env -> Identifier -> ThrowsError ([LispVal] -> ThrowsError LispVal)
-getEnvFunc (Env _ (EnvFunc env)) ident = case Map.lookup ident env of
+getEnvVar' :: Env -> Identifier -> ThrowsError LispVal
+getEnvVar' (Env env) ident = case Map.lookup ident env of
   Nothing -> throw $ UnboundVar ident
   Just a -> return a
+
+-- SK <top-level-only> <operation>
+newtype SyntacticKeyword = SK (Env -> [LispVal] -> ThrowsError (LispVal, Env))
+
+type SKMap = Map.Map Identifier SyntacticKeyword

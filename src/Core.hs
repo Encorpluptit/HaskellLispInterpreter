@@ -23,10 +23,9 @@ halCore opts@(Opts replOpt _) files
   | replOpt = manageFiles >>= launchRepl printer
   | otherwise = Control.Monad.void manageFiles
   where
-    manageFiles = processFiles filePrinter files baseEnv
+    manageFiles = processFiles filePrinter files emptyEnv
     filePrinter = getPrintFct opts{repl=False}
     printer = getPrintFct opts
-    baseEnv = addEnvFuncList emptyEnv builtins
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Process file list given in program arguments:

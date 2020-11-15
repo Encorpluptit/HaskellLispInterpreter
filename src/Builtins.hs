@@ -20,9 +20,10 @@ type BinaryOperator a = (a -> a -> a)
 
 --type BoolBinaryOperator a = (a -> a -> Bool)
 
-getBuiltins :: Identifier -> ThrowsError ([LispVal] -> ThrowsError LispVal)
-getBuiltins ident =  case lookup ident builtins of
-    Just a -> return a
+getBuiltins :: Env -> Identifier -> ThrowsError (LispVal, Env)
+getBuiltins env ident =  case lookup ident builtins of
+    Just a -> return (Func env (LispFct fct), env)
+        where fct _ = a
     Nothing -> throw $ UnboundVar ident
 
 builtins :: [(String, [LispVal] -> ThrowsError LispVal)]

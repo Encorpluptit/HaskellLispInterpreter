@@ -3,8 +3,10 @@ module Eval
   )
 where
 
-import Builtins
+import Control.Applicative
+import qualified Data.Map as Map
 import Data.List (genericLength)
+import Builtins
 import DataTypes
 import Debug.Trace
 import Environment
@@ -12,15 +14,13 @@ import HalError
 import HalErrorsMonad
 
 eval :: Env -> LispVal -> ThrowsError (LispVal, Env)
---eval env (Atom ident) = getEnvVar env ident
-eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env val@(ValString _) = return (val, env)
 eval env val@(ValBool _) = return (val, env)
 eval env val@(ValNum _) = return (val, env)
+eval env (Atom ident) = evalAtom env ident
+eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env (ValList (Atom "define" : args)) = define env args
 eval env (ValList (Atom "cond" : args)) = cond env args
---eval env (ValList [Atom "#t", val]) = evalBool env val isTrueExpr
---eval env (ValList [Atom "#f", val]) = evalBool env val isFalseExpr
 eval env (ValList [Atom "if", condition, validated, other]) = do
   condEvaluated <- eval env condition
   case condEvaluated of
@@ -47,11 +47,14 @@ evalFunc _ notFunc = throw $ NotFunction "Cannot evaluate" notFunc
 
 -- | -----------------------------------------------------------------------------------------------------------------
 apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
-apply func env args = do
-  --  fct <- trace (show args) getEnvFunc env func
-  fct <- getEnvFunc env func
-  res <- fct args
-  return (res, env)
+apply func env args = case lookup func builtins of
+    Just f -> do
+        res <- f args
+        return (res, env)
+    Nothing -> throw $ NotFunction "Cannot evaluate" (Atom func)
+
+evalAtom :: Env -> Identifier -> ThrowsError (LispVal, Env)
+evalAtom env ident = getEnvVar env ident <|> getBuiltins env ident
 
 -- TODO: refacto
 evalArgs :: [LispVal] -> Env -> [LispVal] -> ThrowsError [LispVal]
@@ -78,7 +81,7 @@ evalArgs acc env (first : left) = do
 --  where
 --    result res = if res then eval env validated else cond env other
 --cond _ args@(_ : _) = throw $ NbArgsError "cond" 2 args
---cond _ _ = throw $ SyntaxError "Error in cond"0
+--cond _ _ = throw $ SyntaxError "Error in cond"
 
 cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 cond env nature@((ValList [Atom a, validated]) : other)
@@ -96,6 +99,21 @@ cond env (ValList [condition, validated] : other) = do
 -- TODO: change Error ?
 cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
 
+
+
+defaultSK :: SKMap
+defaultSK = Map.fromList
+    [
+    ("define", SK define)
+    , ("lambda", SK lambda)
+--    , ("if", SK ifStmt)
+--    , ("apply", SK applyHFunc)
+--    , ("and", SK boolAnd)
+--    , ("or", SK boolOr)
+--    , ("let", SK letStmt)
+    ]
+
+
 -- | define keyword used for creating global variable name bindings. This
 --  operation may overwrite existing bindings, if present.
 --
@@ -103,20 +121,31 @@ cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
 define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 define _ [] = throw $ NbArgsError "define" 2 []
 define _ [a] = throw $ NbArgsError "define" 2 [a]
-define envMap [Atom name, expr] = do
-  (result, _) <- eval envMap expr
-  return (Atom name, addEnvVar envMap name result)
-define envMap [ValList (Atom name : args), body] = do
-  return (Atom name, addEnvFunc envMap name fct)
+define env [Atom name, expr] = do
+    (result, _) <- eval env expr
+    return (Atom name, addEnvVar env name result)
+define env [ValList (Atom name : args), body] = do
+  return (Atom name, addEnvVar env name (Func env (LispFct fct)))
   where
-    fct callArgs
+    fct internEnv callArgs
       | length callArgs /= length args = throw $ NbArgsError name (genericLength args) callArgs
       | otherwise = do
         argNames <- getArgNames [] args
-        (res, _) <- eval (internEnv argNames) body
+        (res, _) <- eval (composeEnv argNames) body
         return res
       where
-        internEnv argNames = addVarsToEnv envMap (zip argNames callArgs)
+        composeEnv argNames = addVarsToEnv internEnv (zip argNames callArgs)
+--define envMap [ValList (Atom name : args), body] = do
+--  return (Atom name, addEnvFunc envMap name fct)
+--  where
+--    fct callArgs
+--      | length callArgs /= length args = throw $ NbArgsError name (genericLength args) callArgs
+--      | otherwise = do
+--        argNames <- getArgNames [] args
+--        (res, _) <- eval (internEnv argNames) body
+--        return res
+--      where
+--        internEnv argNames = addVarsToEnv envMap (zip argNames callArgs)
 define _ [_, _] = throw $ SyntaxError "define (define <name> <expr>)"
 define _ args = throw $ NbArgsError "define" 2 args
 
