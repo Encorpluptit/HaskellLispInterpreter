@@ -10,7 +10,6 @@ import LibParsing
 import Options
 import Parser
 import PrintUtils
-import Builtins
 import REPL
 
 -- | -----------------------------------------------------------------------------------------------------------------

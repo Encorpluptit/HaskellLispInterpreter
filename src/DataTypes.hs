@@ -1,10 +1,10 @@
 module DataTypes
   ( LispVal (..),
     Identifier,
-    Env(..),
-    HALError(..),
-    ThrowsError(..),
-    LispFct(..),
+    Env (..),
+    HALError (..),
+    ThrowsError (..),
+    LispFct (..),
     showVal,
     throw,
     unpackError,
@@ -13,15 +13,12 @@ module DataTypes
     addEnvVar,
     getEnvVar,
     getEnvVar',
-    mergeEnvs
+    mergeEnvs,
   )
 where
 
 import Control.Applicative
 import qualified Data.Map as Map
---import HalError
---import HalErrorsMonad
---import Data.Ratio
 
 type Identifier = String
 
@@ -55,39 +52,42 @@ type Identifier = String
 ----             | Func (LispData -> ThrowsError LispData)
 
 data HALError
-  = UnknownError String -- generic Error
-  | ParsingError LispVal String -- (eq? 1)
-  | NbArgsError String Integer [LispVal] -- (eq? 1)
-  | TypeError String LispVal -- (eq? 1 "l")
-  | UnboundVar String -- (eq? foo 1)   { foo not defined }
+  = UnknownError String
+  | ParsingError LispVal String
+  | NbArgsError String Integer [LispVal]
+  | TypeError String LispVal
+  | UnboundVar Identifier
   | BuiltinError String [LispVal]
-  | NotFunction String LispVal         -- (foo 1)       { (define foo 0) }
-  | KeywordError LispVal -- Useful with unbound Var ?
-  | SyntaxError String -- (define foo 0
+  | NotFunction LispVal
+  | KeywordError LispVal
+  | SyntaxError String
+    deriving (Eq)
+
 --    deriving (Eq)
-  -- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
+-- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
 instance Show HALError where
   show = showHALError
 
 showHALError :: HALError -> String
 showHALError (UnknownError msg) = "Unknown Error: " ++ msg
-showHALError (ParsingError parsed left) = "Parsing Error: Parsed:\n" ++ show parsed ++ "\nLeft: "++ show left
+showHALError (ParsingError parsed left) = "Parsing Error: Parsed:\n" ++ show parsed ++ "\nLeft: " ++ show left
 showHALError (TypeError msg val) = "Wrong type: " ++ msg ++ " -> " ++ show val
 showHALError (NbArgsError op nb val) =
   "Wrong Number of Args in operator { " ++ op ++ " }. Expected "
     ++ show nb
-    ++ " operand(s) -> Got: " ++ show (length val) ++ " -> "
+    ++ " operand(s) -> Got: "
+    ++ show (length val)
+    ++ " -> "
     ++ show val
-showHALError (UnboundVar var) = "UnboundVar: " ++ var
+showHALError (UnboundVar var) = var ++ " : not defined"
 showHALError (BuiltinError builtin args) = "Unrecognised " ++ builtin ++ " (built-in) args: " ++ show args
 showHALError (SyntaxError msg) = msg
 showHALError (KeywordError val) = "KeyWord Error, got : " ++ show val
-showHALError (NotFunction msg val) = msg ++ " : " ++ show val
-
+showHALError (NotFunction val) = "attempt to apply non-procedure #t" ++ " : " ++ show val
 
 newtype ThrowsError a = HandleError (Either HALError a)
---  deriving (Show, Eq)
+  --  deriving (Show, Eq)
   deriving (Show)
 
 instance Functor ThrowsError where
@@ -104,8 +104,8 @@ instance Alternative ThrowsError where
   (HandleError a) <|> (HandleError b) = case a of
     Right val -> HandleError (Right val)
     Left err -> case b of
-         Right val -> HandleError (Right val)
-         Left _ -> HandleError (Left err)
+      Right val -> HandleError (Right val)
+      Left _ -> HandleError (Left err)
 
 instance Monad ThrowsError where
   (HandleError te) >>= f =
@@ -124,7 +124,10 @@ unpackError (HandleError val) = val
 newtype LispFct = LispFct (Env -> [LispVal] -> ThrowsError LispVal)
 
 instance Show LispFct where
-    show _ = "#<procedure>"
+  show _ = "#<procedure>"
+
+instance Eq LispFct where
+   _ == _ = False
 
 data LispVal
   = Atom String
@@ -134,16 +137,18 @@ data LispVal
   | ValBool Bool
   | ValString String
   | Func Env LispFct
+    deriving (Eq)
+
 --  deriving (Show)
 
 instance Show LispVal where
-    show (Atom name) = "Atom  \"" ++ name ++ "\""
-    show (ValNum num) = "ValNum " ++ show num
-    show (ValList lst) = "Vallst " ++ show bool
-    show (ValBool bool) = "ValNum " ++ show bool
-    show (ValString str) = "ValNum \"" ++ str ++ "\""
-    show (Func _ func) = "Func {Intern Env} " ++ show func
-    show val = show val
+  show (Atom name) = "Atom \"" ++ name ++ "\""
+  show (ValNum num) = "ValNum " ++ show num
+  show (ValList list) = "ValList [" ++ foldl1 ((++) . (++ ", ")) (show <$> list) ++ "]"
+  show (ValDottedList list left) = "ValDottedList (" ++ show list ++ " . " ++ show left ++ ")"
+  show (ValBool bool) = "ValNum " ++ show bool
+  show (ValString str) = "ValString \"" ++ str ++ "\""
+  show (Func _ func) = "Func {Intern Env} " ++ show func
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Double, rational, etc. implementation via LispNum ?
@@ -167,14 +172,10 @@ showVal val =
     (ValNum num) -> show num
     (ValBool True) -> "#t"
     (ValBool False) -> "#f"
-    --    Nil                 -> "'()"
     (ValList []) -> "'()"
     (ValDottedList vals end) -> "(" ++ unwordsListVal vals ++ " . " ++ showVal end ++ ")"
     (ValList vals) -> "(" ++ unwordsListVal vals ++ ")"
     (Func _ _) -> "#<procedure>"
-
---    (Fun _ )        -> "(internal function)"
---    (Lambda _ _)    -> "(lambda function)"
 
 unwordsListVal :: [LispVal] -> String
 unwordsListVal list = unwords $ showVal <$> list
@@ -183,17 +184,18 @@ newtype EnvVar = EnvVar (Map.Map Identifier LispVal)
   deriving (Show)
 
 newtype Env = Env (Map.Map Identifier LispVal)
---
+    deriving (Eq)
+
 --instance Show Env where
 --  show (Env env) = "Env : " ++ show (Map.keys env)
 
 instance Show Env where
-    show (Env env) = "Env: " ++ envMap
-        where
-            keys = Map.keys env
-            envMap
-                | not (null keys) = foldl1 (++) (map (("\n\t" ++) . show) (Map.toList env))
-                | otherwise = "[Empty]"
+  show (Env env) = "Env: " ++ envMap
+    where
+      emptyenv = (not . null . Map.keys) env
+      envMap
+        | emptyenv = foldl1 (++) (map (("\n\t" ++) . show) (Map.toList env))
+        | otherwise = "[Empty]"
 
 emptyEnv :: Env
 emptyEnv = Env Map.empty

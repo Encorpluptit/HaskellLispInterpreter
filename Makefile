@@ -52,6 +52,7 @@ ghci:
 test:
 	-$(stack) test $(package)
 
+tests: test
 
 test-ghci:
 	$(stack) ghci $(package):test:$(package)-tests --ghci-options='-j6 +RTS -A128m'
@@ -83,4 +84,4 @@ sign:
 	@echo "********************"
 	@echo ""
 
-.PHONY : build build-dirty run install ghci test func_tests test-ghci ghcid dev-deps re clean fclean all
+.PHONY : build build-dirty run install ghci test tests func_tests test-ghci ghcid dev-deps re clean fclean all

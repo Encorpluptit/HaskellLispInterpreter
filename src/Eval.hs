@@ -35,7 +35,9 @@ evalFunc env (ValList (headExpr : argExprs)) = do
   (result, _) <- eval env headExpr
   args <- evalArgs [] env argExprs
   evalFunc' env result args
-evalFunc _ notFunc = throw $ NotFunction "Cannot evaluate" notFunc
+evalFunc _ (Atom "#f") = throw . NotFunction $ Atom "#f"
+evalFunc _ (Atom "#t") = throw . NotFunction $ Atom "#t"
+evalFunc _ notFunc = throw $ NotFunction notFunc
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Ignoring any new environment, since Lisp expressions cannot affect name bindings at a higher-level scope,
@@ -44,7 +46,7 @@ evalFunc' :: Env -> LispVal -> [LispVal] -> ThrowsError (LispVal, Env)
 evalFunc' env (Func closure (LispFct f)) args = do
   result <- f (mergeEnvs env closure) args
   return (result, env)
-evalFunc' _ notFunc _ = throw $ NotFunction "Cannot evaluate" notFunc
+evalFunc' _ notFunc _ = throw $ NotFunction notFunc
 
 
 
@@ -55,11 +57,13 @@ apply func env args = case lookup func builtins of
     Just f -> do
         res <- f args
         return (res, env)
-    Nothing -> throw $ NotFunction "Cannot evaluate" (Atom func)
+    Nothing -> throw . NotFunction $ Atom func
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get Variable from env (Value or Func) or search in builtins
 evalAtom :: Env -> Identifier -> ThrowsError (LispVal, Env)
+evalAtom env "#f" = return (Atom "#f", env)
+evalAtom env "#t" = return (Atom "#t", env)
 evalAtom env ident = getEnvVar env ident <|> getBuiltins env ident
 
 -- TODO: refacto

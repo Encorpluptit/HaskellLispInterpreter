@@ -28,8 +28,8 @@ parseLispVal :: Parser LispVal
 parseLispVal =
   parseLispValBool
     --    <|> parseLispValChar TODO
-    <|> parseLispValAtom
     <|> parseLispValInt
+    <|> parseLispValAtom
     <|> parseLispValString
     <|> parseQuoted
 --    <|> parseLispList
@@ -52,7 +52,7 @@ parseLispValString :: Parser LispVal
 parseLispValString = do
   _ <- parseChar '"'
   x <- (:) <$> parseNotChar '"' <*> many (parseNotChar '"')
---  _ <- parseChar '"' -- <|> Error mismatched "
+  _ <- parseChar '"' -- <|> Error mismatched "
   return (ValString x)
 
 -- parseLispDataString same as parseLispDataBool
@@ -108,31 +108,3 @@ parseQuoted :: Parser LispVal
 parseQuoted = do
   quoted <- parseChar '\'' *> parseLispVal
   return $ ValList [Atom "quote", quoted]
-
---parseLispDataBool :: Parser LispData
---parseLispDataBool = Value <$> parseLispValBool
-
---parseLispValInt :: Parser LispNum
---parseLispValInt = Number <$> parseInt
-
---parseLispValInteger :: Parser LispNum
---parseLispValInteger = NumInteger <$> parseInteger
---
---parseLispValFloat :: Parser LispNum
---parseLispValFloat = NumFloat <$> parseFloat
---
---parseLispValDouble :: Parser LispNum
---parseLispValDouble = NumDouble <$> parseDouble
-
---
---parseLispValInt :: Parser LispNum
---parseLispValInt = NumInt <$> parseInt
---
---parseLispValInteger :: Parser LispNum
---parseLispValInteger = NumInteger <$> parseInteger
---
---parseLispValFloat :: Parser LispNum
---parseLispValFloat = NumFloat <$> parseFloat
---
---parseLispValDouble :: Parser LispNum
---parseLispValDouble = NumDouble <$> parseDouble
