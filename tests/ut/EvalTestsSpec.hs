@@ -1,6 +1,5 @@
 module EvalTestsSpec where
 
-import Data.Either
 import DataTypes
 import Parser
 import Test.Hspec
@@ -9,6 +8,7 @@ spec :: Spec
 spec = describe "Eval Testing" $ do
   testEquals
   testIfs
+  testArithmetic
 
 expectRightValue :: LispVal -> Either HALError (LispVal, Env) -> Bool
 expectRightValue expected res = case res of
@@ -112,7 +112,6 @@ testEquals =
           ("(eq? foo \"lol\")", ValBool False)
         ]
 
-
 testIfs :: Spec
 testIfs =
   describe "Tests for if condition then validated else other" $ do
@@ -208,19 +207,56 @@ testIfs =
           ("(if (eq? foo \"lol\") #t #f)", Atom "#f")
         ]
 
+testArithmetic :: Spec
+testArithmetic =
+  describe "Tests for Arithmetic" $ do
+    it "(+ 2 2) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(+ 2 2)", ValNum 4)]
+    it "(+ 2 -2) \t->\t 0" $ do
+      chainAssertion
+        emptyEnv
+        [("(+ 2 -2)", ValNum 0)]
+    it "(+ 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t 48" $ do
+      chainAssertion
+        emptyEnv
+        [("(+ 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2)", ValNum 48)]
+    it "(- 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t -48" $ do
+      chainAssertion
+        emptyEnv
+        [("(- 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)", ValNum (-48))]
+    it "(- 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2) \t->\t -48" $ do
+      chainAssertion
+        emptyEnv
+        [("(- 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2)", ValNum (-44))]
+    it "(+ 123 1231 23 213 123 123 12 31 23 123 123 1 23 123 123 12 31 23 123 4 23 453 453 45 34 343 534 5) \t->\t 4255" $ do
+      chainAssertion
+        emptyEnv
+        [("(+ 123 1231 23 213 123 123 12 31 23 123 -123 1 23 123 123 12 31 23 123 4 23 453 453 45 34 343 534 5)", ValNum 4255)]
+    it "(- 123 1231 23 213 123 123 12 31 23 123 123 1 23 123 123 12 31 23 123 4 23 453 453 45 34 343 534 5) \t->\t -4255" $ do
+      chainAssertion
+        emptyEnv
+        [("(- 123 1231 23 213 123 123 12 31 23 123 123 1 23 123 123 12 31 23 123 4 23 453 453 45 34 343 534 5)", ValNum (-4255))]
+    it "(= 2 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(= 2 2)", ValBool True)]
+    it "(= 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(= 2 3)", ValBool False)]
+    it "(!= 2 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(!= 2 2)", ValBool False)]
+    it "(!= 2 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(!= 2 3)", ValBool True)]
 
---testParseChar :: Spec
---testParseChar =
---    describe "Parse Char" $ do
---        it "parse 'a' in \"abcd\" -> Right ('a', \"bcd\")" $ do
---            runParser (parseChar 'a') "abcd" `shouldBe` Right ('a', "bcd")
---        it "parse 'z' in \"abcd\" -> Left _" $ do
---            runParser (parseChar 'z') "abcd" `shouldSatisfy` isLeft
---        it "parse 'a' in \"aaaa\" -> Right ('a', \"aaa\")" $ do
---            runParser (parseChar 'a') "aaaa" `shouldBe` Right ('a', "aaa")
---        it "parse 'b' in \"baaa\" -> Right ('b', \"aaa\")" $ do
---            runParser (parseChar 'b') "baaa" `shouldBe` Right ('b', "aaa")
---        it "parse 'b' in \"bcda\" -> Right ('b', \"cda\")" $ do
---            runParser (parseChar 'b') "bcda" `shouldBe` Right ('b', "cda")
---        it "parse 'b' in \"abcd\" -> Left _" $ do
---            runParser (parseChar 'b') "abcd" `shouldSatisfy` isLeft
+testsLetStatement :: Spec
+testsLetStatement =
+  describe "Tests for let" $ do
+    it "(eq? 2 2) \t->\t #t" $ do
+        pendingWith ""
