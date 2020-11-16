@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 324490393ec08b59fe1c9338f58067c6bd4f13c9595555a7c7f447fdfaf016f2
+-- hash: 3b314131a8b43b0eac7f1f1508cb91a3900343e8f0f795c9faa804ed7e5b990d
 
 name:           FunHAL
 version:        0.1.0.0
@@ -34,8 +34,6 @@ library
       Environment
       Eval
       File
-      HalError
-      HalErrorsMonad
       Options
       Parser
       REPL
