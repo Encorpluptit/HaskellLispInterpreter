@@ -139,6 +139,15 @@ testIfs =
     it "(if (eq? 'foo 'foo) #t #f) \t->\t #t" $ do
       unpackError (parseExpr emptyEnv "(if (eq? 'foo 'foo) #t #f)") `shouldSatisfy` expectRightValue (Atom "#t")
 
+    it "(if (eq? \"lol\" \"lol\") #t #f) \t->\t #t" $ do
+      unpackError (parseExpr emptyEnv "(if (eq? 'foo 'foo) #t #f)") `shouldSatisfy` expectRightValue (Atom "#t")
+
+    it "(if (eq? \"lola\" \"lol\") #t #f) \t->\t #t" $ do
+      unpackError (parseExpr emptyEnv "(if (eq? \"lola\" \"lol\") #t #f)") `shouldSatisfy` expectRightValue (Atom "#f")
+
+    it "(if (eq? \"lol\" \"lola\") #t #f) \t->\t #t" $ do
+      unpackError (parseExpr emptyEnv "(if (eq? \"lol\" \"lola\") #t #f)") `shouldSatisfy` expectRightValue (Atom "#f")
+
     it "(if (eq? 'foo 'foob) #t #f) \t->\t #f" $ do
       unpackError (parseExpr emptyEnv "(if (eq? 'foo 'foob) #t #f)") `shouldSatisfy` expectRightValue (Atom "#f")
 
@@ -238,6 +247,133 @@ testArithmetic =
       chainAssertion
         emptyEnv
         [("(- 123 1231 23 213 123 123 12 31 23 123 123 1 23 123 123 12 31 23 123 4 23 453 453 45 34 343 534 5)", ValNum (-4255))]
+
+    it "(* 2 2) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2)", ValNum 4)]
+    it "(* 5 5) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 5 5)", ValNum 25)]
+    it "(* 25 25) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 25 25)", ValNum 625)]
+    it "(* 2 -2) \t->\t 0" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 -2)", ValNum (-4))]
+    it "(* 5 -5) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 5 -5)", ValNum (-25))]
+    it "(* 25 -25) \t->\t 4" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 25 -25)", ValNum (-625))]
+    it "(* 2 -2) \t->\t 0" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 -2)", ValNum (-4))]
+    it "(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)", ValNum 67108864)]
+    it "(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t -67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)", ValNum (-67108864))]
+    it "(* 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t -67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)", ValNum (-67108864))]
+    it "(* 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2) \t->\t -67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2)", ValNum (-67108864))]
+    it "(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2) \t->\t -67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2)", ValNum (-67108864))]
+    it "(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2) \t->\t -67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2)", ValNum (-67108864))]
+    it "(* 123 23 123 123 12 31 23 123 123 1 23 123 123 12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 123 12 31 23 123 123 1 23 123 123 12)", ValNum (23133613427319697951536))]
+    it "(* -123 23 123 123 12 31 23 123 123 1 23 123 123 12) \t->\t -23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -123 23 123 123 12 31 23 123 123 1 23 123 123 12)", ValNum (-23133613427319697951536))]
+    it "(* 123 23 123 -123 12 31 23 123 123 1 23 123 123 12) \t->\t -23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 -123 12 31 23 123 123 1 23 123 123 12)", ValNum (-23133613427319697951536))]
+    it "(* 123 23 123 123 12 31 -23 123 123 1 23 123 123 12) \t->\t -23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 123 12 31 -23 123 123 1 23 123 123 12)", ValNum (-23133613427319697951536))]
+    it "(* 123 23 123 123 12 31 23 123 123 -1 23 123 123 12) \t->\t -23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 123 12 31 23 123 123 -1 23 123 123 12)", ValNum (-23133613427319697951536))]
+    it "(* 123 23 123 123 12 31 23 123 123 1 23 123 123 -12) \t->\t -23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 123 12 31 23 123 123 1 23 123 123 -12)", ValNum (-23133613427319697951536))]
+
+    it "(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2)", ValNum 67108864)]
+    it "(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2)", ValNum (67108864))]
+    it "(* 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2)", ValNum (67108864))]
+    it "(* 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2)", ValNum (67108864))]
+    it "(* 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 2 2 -2 2 2 2 2 2 2 2 2 2 2 2 -2 2 2 2 2 2 2 2 2 2 2)", ValNum (67108864))]
+    it "(* 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2) \t->\t 67108864" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 2 -2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 -2)", ValNum (67108864))]
+    it "(* -123 23 123 123 12 31 23 123 123 1 23 123 123 -12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -123 23 123 123 12 31 23 123 123 1 23 123 123 -12)", ValNum (23133613427319697951536))]
+    it "(* -123 23 -123 123 12 31 23 123 123 1 23 123 123 12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* -123 23 -123 123 12 31 23 123 123 1 23 123 123 12)", ValNum (23133613427319697951536))]
+    it "(* 123 23 123 -123 -12 31 23 123 123 1 23 123 123 12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 -123 -12 31 23 123 123 1 23 123 123 12)", ValNum (23133613427319697951536))]
+    it "(* 123 23 123 123 12 -31 -23 123 123 1 23 123 123 12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 123 12 -31 -23 123 123 1 23 123 123 12)", ValNum (23133613427319697951536))]
+    it "(* 123 23 123 -123 12 31 23 123 123 -1 23 123 123 12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 -123 12 31 23 123 123 -1 23 123 123 12)", ValNum (23133613427319697951536))]
+    it "(* 123 23 123 -123 12 31 23 123 123 1 23 123 123 -12) \t->\t 23133613427319697951536" $ do
+      chainAssertion
+        emptyEnv
+        [("(* 123 23 123 -123 12 31 23 123 123 1 23 123 123 -12)", ValNum (23133613427319697951536))]
+
     it "(= 2 2) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -254,9 +390,356 @@ testArithmetic =
       chainAssertion
         emptyEnv
         [("(!= 2 3)", ValBool True)]
+    it "(define foo 2) && (= foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(= foo 2)", ValBool True)
+        ]
+    it "(define foo 2) && (= 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(= foo 3)", ValBool False)
+        ]
+    it "(define foo 2) && (!= 2 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(!= foo 2)", ValBool False)
+        ]
+    it "(define foo 2) && (!= 2 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(!= foo 3)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 2) && (= foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(= foo bar)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 3) && (= 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(= foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 2) && (!= 2 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(!= foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 3) && (!= 2 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(!= foo bar)", ValBool True)
+        ]
+
+    it "(> 2 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(> 2 2)", ValBool False)
+        ]
+    it "(< 2 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(< 2 2)", ValBool False)
+        ]
+    it "(>= 2 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(>= 2 2)", ValBool True)
+        ]
+    it "(<= 2 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(<= 2 2)", ValBool True)
+        ]
+    it "(define foo 2) && (> foo 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(> foo 2)", ValBool False)
+        ]
+    it "(define foo 2) && (< foo 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(< foo 2)", ValBool False)
+        ]
+    it "(define foo 2) && (>= foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(>= foo 2)", ValBool True)
+        ]
+    it "(define foo 2) && (> 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(> 2 foo)", ValBool False)
+        ]
+    it "(define foo 2) && (< 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(< 2 foo)", ValBool False)
+        ]
+    it "(define foo 2) && (< 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(< 2 foo)", ValBool False)
+        ]
+    it "(define foo 2) && (>= 2 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(>= 2 foo)", ValBool True)
+        ]
+    it "(define foo 2) && (<= foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(<= foo 2)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 2) && (> foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(> foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 2) && (< foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(< foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 2) && (>= foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(>= foo bar)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 2) && (<= foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(<= foo bar)", ValBool True)
+        ]
+
+
+    it "(> 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(> 2 3)", ValBool False)
+        ]
+    it "(< 2 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(< 2 3)", ValBool True)
+        ]
+    it "(>= 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(>= 2 3)", ValBool False)
+        ]
+    it "(<= 2 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(<= 2 3)", ValBool True)
+        ]
+    it "(define foo 2) && (> foo 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(> foo 3)", ValBool False)
+        ]
+    it "(define foo 2) && (< foo 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(< foo 3)", ValBool True)
+        ]
+    it "(define foo 3) && (> 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(> 2 foo)", ValBool False)
+        ]
+    it "(define foo 3) && (< 2 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(< 2 foo)", ValBool True)
+        ]
+    it "(define foo 2) && (>= foo 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(>= foo 3)", ValBool False)
+        ]
+    it "(define foo 2) && (<= foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(<= foo 2)", ValBool True)
+        ]
+    it "(define foo 3) && (>= 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(>= 2 foo)", ValBool False)
+        ]
+    it "(define foo 3) && (<= 2 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(<= 2 foo)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 3) && (> foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(> foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 3) && (< foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(< foo bar)", ValBool True)
+        ]
+    it "(define foo 2) && (define bar 3) && (>= foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(>= foo bar)", ValBool False)
+        ]
+    it "(define foo 2) && (define bar 3) && (<= foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(<= foo bar)", ValBool True)
+        ]
+
+
+
+    it "(> 3 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(> 3 2)", ValBool True)
+        ]
+    it "(< 3 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(< 3 2)", ValBool False)
+        ]
+    it "(>= 3 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(>= 3 2)", ValBool True)
+        ]
+    it "(<= 3 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(<= 3 2)", ValBool False)
+        ]
+    it "(define foo 3) && (> foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(> foo 2)", ValBool True)
+        ]
+    it "(define foo 3) && (< foo 2) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(< foo 2)", ValBool False)
+        ]
+    it "(define foo 2) && (> 3 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(> 3 foo)", ValBool True)
+        ]
+    it "(define foo 2) && (< 3 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(< 3 foo)", ValBool False)
+        ]
+    it "(define foo 3) && (>= foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(>= foo 2)", ValBool True)
+        ]
+    it "(define foo 3) && (<= foo 3) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(<= foo 3)", ValBool True)
+        ]
+    it "(define foo 2) && (>= 3 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(>= 3 foo)", ValBool True)
+        ]
+    it "(define foo 2) && (<= 3 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(<= 3 foo)", ValBool False)
+        ]
+    it "(define foo 3) && (define bar 2) && (> foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(> foo bar)", ValBool True)
+        ]
+    it "(define foo 3) && (define bar 2) && (< foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(< foo bar)", ValBool False)
+        ]
+    it "(define foo 3) && (define bar 2) && (>= foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(>= foo bar)", ValBool True)
+        ]
+    it "(define foo 3) && (define bar 2) && (<= foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(<= foo bar)", ValBool False)
+        ]
+
 
 testsLetStatement :: Spec
 testsLetStatement =
   describe "Tests for let" $ do
     it "(eq? 2 2) \t->\t #t" $ do
-        pendingWith ""
+      pendingWith ""
