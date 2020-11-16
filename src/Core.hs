@@ -34,9 +34,18 @@ halCore opts@(Opts replOpt _) files
 -- TODO: remove print and process in halCore ???
 processFiles :: (Env -> String -> IO Env) -> [String] -> Env -> IO Env
 processFiles _ [] env = return env
+--processFiles printFct (x : xs) env = loadFile x >>= printFct env >>= processFiles printFct xs
 processFiles printFct (x : xs) env = do
   file <- loadFile x
-  printFct env file >>= processFiles printFct xs
+  parseEntireFile printFct (lines file) env >>= processFiles printFct xs
+
+parseEntireFile :: (Env -> String -> IO Env) -> [String] -> Env -> IO Env
+parseEntireFile _ [] _ = writeErrorAndExit "EMPTY FILE CONNARD"
+parseEntireFile printFct [x] env = printFct env x
+parseEntireFile printFct (x:y:xs) env = case runParser parseLispVal x of
+    Left _ -> parseEntireFile printFct ((x ++ y):xs) env
+    Right (_, []) -> printFct env x >>= parseEntireFile printFct (y:xs)
+    Right (_, rest) -> writeErrorAndExit ("MDR T MOVAIS" ++ show rest)
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get print function from Opts:
