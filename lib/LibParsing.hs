@@ -164,7 +164,7 @@ parseRational = do
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Return common space's like characters.
 spaceLikeChars :: String
-spaceLikeChars = " \\t\\v\\n"
+spaceLikeChars = " \t\v\n"
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Return a parser that handle any space's like characters.

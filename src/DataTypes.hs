@@ -144,6 +144,7 @@ data LispVal
 instance Show LispVal where
   show (Atom name) = "Atom \"" ++ name ++ "\""
   show (ValNum num) = "ValNum " ++ show num
+  show (ValList[]) = "ValList []"
   show (ValList list) = "ValList [" ++ foldl1 ((++) . (++ ", ")) (show <$> list) ++ "]"
   show (ValDottedList list left) = "ValDottedList (" ++ show list ++ " . " ++ show left ++ ")"
   show (ValBool bool) = "ValNum " ++ show bool
