@@ -26,91 +26,1163 @@ testEquals :: Spec
 testEquals =
   describe "Tests for equality between values" $ do
     it "(eq? 2 2) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 2 2)") `shouldSatisfy` expectRightValue (ValBool True)
+      chainAssertion
+        emptyEnv
+        [("(eq? 2 2)", ValBool True)]
 
-    it "(eq? 2 3) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 2 3)") `shouldSatisfy` expectRightValue (ValBool False)
+    it "(define foo 2) && (eq? foo 2) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(eq? foo 2)", ValBool True)
+        ]
+
+    it "(define foo 2) && (eq? 2 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(eq? 2 foo)", ValBool True)
+        ]
+
+    it "(define foo 2) && (define bar 2) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo 2) && (define bar 2) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? 2 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 2 3)", ValBool False)]
+
+    it "(define foo 2) && (eq? foo 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(eq? foo 3)", ValBool False)
+        ]
+
+    it "(define foo 3) && (eq? 2 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(eq? 2 foo)", ValBool False)
+        ]
+
+    it "(define foo 2) && (define bar 3) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 3) && (define bar 2) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 2) && (define bar 3) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 3) && (define bar 2) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 3) && (define bar 2) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 3) && (define bar 2) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 3) && (define bar 2) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
 
     it "(eq? 200000000000000 200000000000000) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 200000000000000 200000000000000)") `shouldSatisfy` expectRightValue (ValBool True)
+      chainAssertion
+        emptyEnv
+        [("(eq? 200000000000000 200000000000000)", ValBool True)]
 
-    it "(eq? 2 3) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 2 3)") `shouldSatisfy` expectRightValue (ValBool False)
+    it "(define foo 200000000000000) && (eq? foo 200000000000000) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(eq? foo 200000000000000)", ValBool True)
+        ]
+
+    it "(define foo 200000000000000) && (eq? 200000000000000 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(eq? 200000000000000 foo)", ValBool True)
+        ]
+
+    it "(define foo 200000000000000) && (define bar 200000000000000) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(define bar 200000000000000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo 200000000000000) && (define bar 200000000000000) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(define bar 200000000000000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? 200000000000000 200000000000001) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 200000000000000 200000000000001)", ValBool False)]
+
+    it "(define foo 200000000000000) && (eq? foo 200000000000001) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(eq? foo 200000000000001)", ValBool False)
+        ]
+
+    it "(define foo 200000000000001) && (eq? 200000000000000 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000001)", Atom "foo"),
+          ("(eq? 200000000000000 foo)", ValBool False)
+        ]
+
+    it "(define foo 200000000000000) && (define bar 200000000000001) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(define bar 200000000000001)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 200000000000001) && (define bar 200000000000000) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000001)", Atom "foo"),
+          ("(define bar 200000000000000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 200000000000000) && (define bar 200000000000001) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000000)", Atom "foo"),
+          ("(define bar 200000000000001)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 200000000000001) && (define bar 200000000000000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000000000001)", Atom "foo"),
+          ("(define bar 200000000000000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 200000000000000001) && (define bar 200000000000000000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 200000000000000001)", Atom "foo"),
+          ("(define bar 200000000000000000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 200000000000000001) && (define bar 200000000000000000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 200000000000000001)", Atom "foo"),
+          ("(define bar 200000000000000000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 200000000000000001) && (define bar 200000000000000000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 200000000000000001)", Atom "foo"),
+          ("(define bar 200000000000000000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+    it "(eq? 20000 20000) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 20000 20000)", ValBool True)]
+
+    it "(define foo 20000) && (eq? foo 20000) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(eq? foo 20000)", ValBool True)
+        ]
+
+    it "(define foo 20000) && (eq? 20000 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(eq? 20000 foo)", ValBool True)
+        ]
+
+    it "(define foo 20000) && (define bar 20000) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(define bar 20000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo 20000) && (define bar 20000) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(define bar 20000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? 20000 -100) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 20000 -100)", ValBool False)]
+
+    it "(define foo 20000) && (eq? foo -100) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(eq? foo -100)", ValBool False)
+        ]
+
+    it "(define foo -100) && (eq? 20000 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -100)", Atom "foo"),
+          ("(eq? 20000 foo)", ValBool False)
+        ]
+
+    it "(define foo 20000) && (define bar -100) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(define bar -100)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo -100) && (define bar 20000) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -100)", Atom "foo"),
+          ("(define bar 20000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 20000) && (define bar -100) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 20000)", Atom "foo"),
+          ("(define bar -100)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo -100) && (define bar 20000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -100)", Atom "foo"),
+          ("(define bar 20000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 20000) && (define bar -100) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 20000)", Atom "foo"),
+          ("(define bar -100)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 20000) && (define bar -100) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 20000)", Atom "foo"),
+          ("(define bar -100)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 20000) && (define bar -100) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 20000)", Atom "foo"),
+          ("(define bar -100)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+    it "(eq? -1 -1) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? -1 -1)", ValBool True)]
+
+    it "(define foo -1) && (eq? foo -1) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(eq? foo -1)", ValBool True)
+        ]
+
+    it "(define foo -1) && (eq? -1 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(eq? -1 foo)", ValBool True)
+        ]
+
+    it "(define foo -1) && (define bar -1) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(define bar -1)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo -1) && (define bar -1) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(define bar -1)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? -1 200000) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? -1 200000)", ValBool False)]
+
+    it "(define foo -1) && (eq? foo 200000) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(eq? foo 200000)", ValBool False)
+        ]
+
+    it "(define foo 200000) && (eq? -1 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000)", Atom "foo"),
+          ("(eq? -1 foo)", ValBool False)
+        ]
+
+    it "(define foo -1) && (define bar 200000) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(define bar 200000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 200000) && (define bar -1) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000)", Atom "foo"),
+          ("(define bar -1)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo -1) && (define bar 200000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -1)", Atom "foo"),
+          ("(define bar 200000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 200000) && (define bar -1) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 200000)", Atom "foo"),
+          ("(define bar -1)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo -1) && (define bar 200000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo -1)", Atom "foo"),
+          ("(define bar 200000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo -1) && (define bar 200000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo -1)", Atom "foo"),
+          ("(define bar 200000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo -1) && (define bar 200000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo -1)", Atom "foo"),
+          ("(define bar 200000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+    it "(eq? -2000 -2000) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? -2000 -2000)", ValBool True)]
+
+    it "(define foo -2000) && (eq? foo -2000) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(eq? foo -2000)", ValBool True)
+        ]
+
+    it "(define foo -2000) && (eq? -2000 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(eq? -2000 foo)", ValBool True)
+        ]
+
+    it "(define foo -2000) && (define bar -2000) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(define bar -2000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo -2000) && (define bar -2000) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(define bar -2000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? -2000 -30000) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? -2000 -30000)", ValBool False)]
+
+    it "(define foo -2000) && (eq? foo -30000) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(eq? foo -30000)", ValBool False)
+        ]
+
+    it "(define foo -30000) && (eq? -2000 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -30000)", Atom "foo"),
+          ("(eq? -2000 foo)", ValBool False)
+        ]
+
+    it "(define foo -2000) && (define bar -30000) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(define bar -30000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo -30000) && (define bar -2000) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -30000)", Atom "foo"),
+          ("(define bar -2000)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo -2000) && (define bar -30000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -2000)", Atom "foo"),
+          ("(define bar -30000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo -30000) && (define bar -2000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo -30000)", Atom "foo"),
+          ("(define bar -2000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo -5000) && (define bar -30000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo -5000)", Atom "foo"),
+          ("(define bar -30000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo -5000) && (define bar -30000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo -5000)", Atom "foo"),
+          ("(define bar -30000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo -5000) && (define bar -30000) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo -5000)", Atom "foo"),
+          ("(define bar -30000)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
 
     it "(eq? 0 0) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 0 0)") `shouldSatisfy` expectRightValue (ValBool True)
+      chainAssertion
+        emptyEnv
+        [("(eq? 0 0)", ValBool True)]
 
-    it "(eq? 0 3) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 0 3)") `shouldSatisfy` expectRightValue (ValBool False)
+    it "(define foo 0) && (eq? foo 0) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(eq? foo 0)", ValBool True)
+        ]
 
-    it "(eq? 0 0) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 0 0)") `shouldSatisfy` expectRightValue (ValBool True)
+    it "(define foo 0) && (eq? 0 foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(eq? 0 foo)", ValBool True)
+        ]
 
-    it "(eq? 0 3) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 0 3)") `shouldSatisfy` expectRightValue (ValBool False)
+    it "(define foo 0) && (define bar 0) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
 
-    it "(eq? -2 -2) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? -2 -2)") `shouldSatisfy` expectRightValue (ValBool True)
+    it "(define foo 0) && (define bar 0) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
 
-    it "(eq? -2 -3) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? -2 -3)") `shouldSatisfy` expectRightValue (ValBool False)
+    it "(eq? 0 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 0 3)", ValBool False)]
 
-    it "(eq? -200000000000000 -200000000000000) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? -200000000000000 -200000000000000)") `shouldSatisfy` expectRightValue (ValBool True)
+    it "(define foo 0) && (eq? foo 3) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(eq? foo 3)", ValBool False)
+        ]
+
+    it "(define foo 3) && (eq? 0 foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(eq? 0 foo)", ValBool False)
+        ]
+
+    it "(define foo 0) && (define bar 3) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 3) && (define bar 0) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 0) && (define bar 3) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 0)", Atom "foo"),
+          ("(define bar 3)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 3) && (define bar 0) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 3)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 3) && (define bar 0) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 3) && (define bar 0) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 3) && (define bar 0) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 3)", Atom "foo"),
+          ("(define bar 0)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+
 
     it "(eq? 'foo 'foo) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 'foo 'foo)") `shouldSatisfy` expectRightValue (ValBool True)
-
-    it "(eq? 'foo 'fooa) \t->\t #f" $ do
-      unpackError (parseExpr emptyEnv "(eq? 'foo 'fooa)") `shouldSatisfy` expectRightValue (ValBool False)
-
-    it "(eq? foo foo) \t->\t #t" $ do
-      unpackError (parseExpr emptyEnv "(eq? 'foo 'foo)") `shouldSatisfy` expectRightValue (ValBool True)
-
-    it "(eq? foo fooa) \t->\t #f" $ do
-      unpackError (parseExpr emptyEnv "(eq? 'foo 'fooa)") `shouldSatisfy` expectRightValue (ValBool False)
-
-    it "(define foo 42) && (eq? foo 42) \t->\t #t" $ do
       chainAssertion
         emptyEnv
-        [ ("(define foo 42)", Atom "foo"),
-          ("(eq? foo 42)", ValBool True)
-        ]
+        [("(eq? 'foo 'foo)", ValBool True)]
 
-    it "(define foo 42) && (eq? foo 43) \t->\t #f" $ do
+    it "(define foo 'foo) && (eq? foo 'foo) \t->\t #t" $ do
       chainAssertion
         emptyEnv
-        [ ("(define foo 42)", Atom "foo"),
-          ("(eq? foo 43)", ValBool False)
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(eq? foo 'foo)", ValBool True)
         ]
 
-    it "(define foo 42) && (eq? 42 foo) \t->\t #t" $ do
+    it "(define foo 'foo) && (eq? 'foo foo) \t->\t #t" $ do
       chainAssertion
         emptyEnv
-        [ ("(define foo 42)", Atom "foo"),
-          ("(eq? 42 foo)", ValBool True)
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(eq? 'foo foo)", ValBool True)
         ]
 
-    it "(define foo 42) && (eq? 43 foo) \t->\t #f" $ do
+    it "(define foo 'foo) && (define bar 'foo) && (eq? foo bar) \t->\t #t" $ do
       chainAssertion
         emptyEnv
-        [ ("(define foo 42)", Atom "foo"),
-          ("(eq? 43 foo)", ValBool False)
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
         ]
 
-    it "(define foo \"lol\") && (eq? \"lol\" foo) \t->\t #t" $ do
+    it "(define foo 'foo) && (define bar 'foo) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? 'foo 'bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 'foo 'bar)", ValBool False)]
+
+    it "(define foo 'foo) && (eq? foo 'bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(eq? foo 'bar)", ValBool False)
+        ]
+
+    it "(define foo 'bar) && (eq? 'foo foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'bar)", Atom "foo"),
+          ("(eq? 'foo foo)", ValBool False)
+        ]
+
+    it "(define foo 'foo) && (define bar 'bar) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(define bar 'bar)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 'bar) && (define bar 'foo) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'bar)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 'foo) && (define bar 'bar) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'foo)", Atom "foo"),
+          ("(define bar 'bar)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'bar) && (define bar 'foo) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'bar)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 'bar) && (define bar 'foo) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 'bar)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 'bar) && (define bar 'foo) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 'bar)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 'bar) && (define bar 'foo) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 'bar)", Atom "foo"),
+          ("(define bar 'foo)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+
+    it "(eq? 'lol 'lol) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 'lol 'lol)", ValBool True)]
+
+    it "(define foo 'lol) && (eq? foo 'lol) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(eq? foo 'lol)", ValBool True)
+        ]
+
+    it "(define foo 'lol) && (eq? 'lol foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(eq? 'lol foo)", ValBool True)
+        ]
+
+    it "(define foo 'lol) && (define bar 'lol) && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo 'lol) && (define bar 'lol) && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? 'lol 'lola) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? 'lol 'lola)", ValBool False)]
+
+    it "(define foo 'lol) && (eq? foo 'lola) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(eq? foo 'lola)", ValBool False)
+        ]
+
+    it "(define foo 'lola) && (eq? 'lol foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lola)", Atom "foo"),
+          ("(eq? 'lol foo)", ValBool False)
+        ]
+
+    it "(define foo 'lol) && (define bar 'lola) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(define bar 'lola)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 'lola) && (define bar 'lol) && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lola)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo 'lol) && (define bar 'lola) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lol)", Atom "foo"),
+          ("(define bar 'lola)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'lola) && (define bar 'lol) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'lola)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo 'lola) && (define bar 'lol) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo 'lola)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo 'lola) && (define bar 'lol) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo 'lola)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo 'lola) && (define bar 'lol) && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo 'lola)", Atom "foo"),
+          ("(define bar 'lol)", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+
+
+
+
+    it "(eq? \"lol\" \"lol\") \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? \"lol\" \"lol\")", ValBool True)]
+
+    it "(define foo \"lol\") && (eq? foo \"lol\") \t->\t #t" $ do
       chainAssertion
         emptyEnv
         [ ("(define foo \"lol\")", Atom "foo"),
           ("(eq? foo \"lol\")", ValBool True)
         ]
 
+    it "(define foo \"lol\") && (eq? \"lol\" foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(eq? \"lol\" foo)", ValBool True)
+        ]
+
+    it "(define foo \"lol\") && (define bar \"lol\") && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo \"lol\") && (define bar \"lol\") && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? \"lol\" \"lola\") \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? \"lol\" \"lola\")", ValBool False)]
+
+    it "(define foo \"lol\") && (eq? foo \"lola\") \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(eq? foo \"lola\")", ValBool False)
+        ]
+
     it "(define foo \"lola\") && (eq? \"lol\" foo) \t->\t #f" $ do
       chainAssertion
         emptyEnv
         [ ("(define foo \"lola\")", Atom "foo"),
-          ("(eq? foo \"lol\")", ValBool False)
+          ("(eq? \"lol\" foo)", ValBool False)
         ]
+
+    it "(define foo \"lol\") && (define bar \"lola\") && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(define bar \"lola\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo \"lola\") && (define bar \"lol\") && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lola\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo \"lol\") && (define bar \"lola\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lol\")", Atom "foo"),
+          ("(define bar \"lola\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo \"lola\") && (define bar \"lol\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"lola\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo \"lola\") && (define bar \"lol\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo \"lola\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo \"lola\") && (define bar \"lol\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo \"lola\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo \"lola\") && (define bar \"lol\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo \"lola\")", Atom "foo"),
+          ("(define bar \"lol\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+
+
+    it "(eq? \"coucou\" \"coucou\") \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? \"coucou\" \"coucou\")", ValBool True)]
+
+    it "(define foo \"coucou\") && (eq? foo \"coucou\") \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(eq? foo \"coucou\")", ValBool True)
+        ]
+
+    it "(define foo \"coucou\") && (eq? \"coucou\" foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(eq? \"coucou\" foo)", ValBool True)
+        ]
+
+    it "(define foo \"coucou\") && (define bar \"coucou\") && (eq? foo bar) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool True)
+        ]
+
+    it "(define foo \"coucou\") && (define bar \"coucou\") && (eq? bar foo) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool True)
+        ]
+
+    it "(eq? \"coucou\" \"bonjour\") \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [("(eq? \"coucou\" \"bonjour\")", ValBool False)]
+
+    it "(define foo \"coucou\") && (eq? foo \"bonjour\") \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(eq? foo \"bonjour\")", ValBool False)
+        ]
+
+    it "(define foo \"bonjour\") && (eq? \"coucou\" foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"bonjour\")", Atom "foo"),
+          ("(eq? \"coucou\" foo)", ValBool False)
+        ]
+
+    it "(define foo \"coucou\") && (define bar \"bonjour\") && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(define bar \"bonjour\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo \"bonjour\") && (define bar \"coucou\") && (eq? foo bar) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"bonjour\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? foo bar)", ValBool False)
+        ]
+
+    it "(define foo \"coucou\") && (define bar \"bonjour\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"coucou\")", Atom "foo"),
+          ("(define bar \"bonjour\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo \"bonjour\") && (define bar \"coucou\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo \"bonjour\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define foo \"bonjour\") && (define bar \"coucou\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define foo \"bonjour\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define bar 'a) && (define foo \"bonjour\") && (define bar \"coucou\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define bar 'a)", Atom "bar"),
+          ("(define foo \"bonjour\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
+    it "(define foo 'a) && (define bar 'a) && (define foo \"bonjour\") && (define bar \"coucou\") && (eq? bar foo) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 'a)", Atom "foo"),
+          ("(define bar 'a)", Atom "bar"),
+          ("(define foo \"bonjour\")", Atom "foo"),
+          ("(define bar \"coucou\")", Atom "bar"),
+          ("(eq? bar foo)", ValBool False)
+        ]
+
 
 testIfs :: Spec
 testIfs =
@@ -540,7 +1612,6 @@ testArithmetic =
           ("(<= foo bar)", ValBool True)
         ]
 
-
     it "(> 2 3) \t->\t #f" $ do
       chainAssertion
         emptyEnv
@@ -638,8 +1709,6 @@ testArithmetic =
           ("(<= foo bar)", ValBool True)
         ]
 
-
-
     it "(> 3 2) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -736,7 +1805,6 @@ testArithmetic =
           ("(define bar 2)", Atom "bar"),
           ("(<= foo bar)", ValBool False)
         ]
-
 
 testsLetStatement :: Spec
 testsLetStatement =
