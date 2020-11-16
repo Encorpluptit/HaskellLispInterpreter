@@ -14,3 +14,5 @@ jobs:
         run: make re
       - name: make tests
         run: make tests
+      - name: make func_tests
+        run: make func_tests
