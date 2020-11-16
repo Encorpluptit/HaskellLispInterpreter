@@ -139,7 +139,6 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
     it "(eq? 200000000000000 200000000000000) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -253,7 +252,6 @@ testEquals =
           ("(define bar 200000000000000000)", Atom "bar"),
           ("(eq? bar foo)", ValBool False)
         ]
-
 
     it "(eq? 20000 20000) \t->\t #t" $ do
       chainAssertion
@@ -369,7 +367,6 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
     it "(eq? -1 -1) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -483,7 +480,6 @@ testEquals =
           ("(define bar 200000)", Atom "bar"),
           ("(eq? bar foo)", ValBool False)
         ]
-
 
     it "(eq? -2000 -2000) \t->\t #t" $ do
       chainAssertion
@@ -599,8 +595,6 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
-
     it "(eq? 0 0) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -714,9 +708,6 @@ testEquals =
           ("(define bar 0)", Atom "bar"),
           ("(eq? bar foo)", ValBool False)
         ]
-
-
-
 
     it "(eq? 'foo 'foo) \t->\t #t" $ do
       chainAssertion
@@ -832,8 +823,6 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
-
     it "(eq? 'lol 'lol) \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -947,11 +936,6 @@ testEquals =
           ("(define bar 'lol)", Atom "bar"),
           ("(eq? bar foo)", ValBool False)
         ]
-
-
-
-
-
 
     it "(eq? \"lol\" \"lol\") \t->\t #t" $ do
       chainAssertion
@@ -1067,8 +1051,6 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
-
     it "(eq? \"coucou\" \"coucou\") \t->\t #t" $ do
       chainAssertion
         emptyEnv
@@ -1183,12 +1165,96 @@ testEquals =
           ("(eq? bar foo)", ValBool False)
         ]
 
-
 testIfs :: Spec
 testIfs =
   describe "Tests for if condition then validated else other" $ do
     it "(if (> 2 2) #t #f) \t->\t #f" $ do
-      unpackError (parseExpr emptyEnv "(if (> 2 2) #t #f)") `shouldSatisfy` expectRightValue (Atom "#f")
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) #t #f)", Atom "#f")
+        ]
+
+    it "(define foo 2) && (if (> foo 2) #t #f) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(if (> foo 2) #t #f)", Atom "#f")
+        ]
+
+    it "(define foo 2) && (if (> 2 foo) #t #f) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(if (> 2 foo) #t #f)", Atom "#f")
+        ]
+
+
+    it "(if (> 2 2) 1 2) \t->\t 2" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) 1 2)", ValNum 2)
+        ]
+
+    it "(define foo 2) && (if (> foo 2) 1 2) \t->\t 2" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(if (> foo 2) 1 2)", ValNum 2)
+        ]
+
+    it "(define foo 2) && (if (> 2 foo) 1 2) \t->\t 2" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(if (> 2 foo) 1 2)", ValNum 2)
+        ]
+
+    it "(define foo 2) && (if (> 2 2) 1 foo) \t->\t 2" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(if (> 2 2) 1 foo)", ValNum 2)
+        ]
+
+    it "(define foo 1) && (if (> 2 2) foo 2) \t->\t 1" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 1)", Atom "foo"),
+          ("(if (> 2 2) foo 2)", ValNum 1)
+        ]
+
+----
+
+    it "(if (> 2 2) 2 1) \t->\t 2" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) 2 1)", ValNum 1)
+        ]
+
+    it "(if (> 2 2) 'lol 'mdr) \t->\t mdr" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) 'lol 'mdr)", Atom "mdr")
+        ]
+
+    it "(if (> 2 2) 'mdr 'lol) \t->\t lol" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) 'mdr 'lol)", Atom "lol")
+        ]
+
+    it "(if (> 2 2) \"lol\" \"mdr\") \t->\t \"mdr\"" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) \"lol\" \"mdr\")", ValString "mdr")
+        ]
+
+    it "(if (> 2 2) \"mdr\" \"lol\") \t->\t \"lol\"" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(if (> 2 2) \"mdr\" \"lol\")", ValString "lol")
+        ]
+
 
     it "(if (< 2 2) #t #f) \t->\t #f" $ do
       unpackError (parseExpr emptyEnv "(if (< 2 2) #t #f)") `shouldSatisfy` expectRightValue (Atom "#f")
