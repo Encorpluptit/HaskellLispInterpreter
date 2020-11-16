@@ -6,11 +6,8 @@ where
 
 import Control.Applicative
 import DataTypes
-import HalError
-import HalErrorsMonad
 import Eval
 import LibParsing
-import Environment
 
 parseExpr :: Env -> String -> ThrowsError (LispVal, Env)
 --parseExpr str = case runParser (parseManySpaced parseLispVal) str of
@@ -55,8 +52,6 @@ parseLispValString = do
   _ <- parseChar '"' -- <|> Error mismatched "
   return (ValString x)
 
--- parseLispDataString same as parseLispDataBool
-
 parseLispValInt :: Parser LispVal
 parseLispValInt = ValNum <$> parseInteger
 
@@ -72,12 +67,12 @@ parseLispValAtom = do
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- List:
-parseLispList :: Parser LispVal
-parseLispList = do
-  _ <- parseSpacedChar '('
-  x <- parseLispValList <|> parseLispValDottedList
-  _ <- parseSpacedChar ')'
-  return x
+--parseLispList :: Parser LispVal
+--parseLispList = do
+--  _ <- parseSpacedChar '('
+--  x <- parseLispValList <|> parseLispValDottedList
+--  _ <- parseSpacedChar ')'
+--  return x
 
 --parseLispValList :: Parser LispVal
 --parseLispValList =ValList <$> many (parseLispVal <* many parseSpaceLike)

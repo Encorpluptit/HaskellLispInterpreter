@@ -18,13 +18,8 @@ eval env (ValList [Atom "quote", val]) = return (val, env)
 eval env (ValList (Atom "define" : args)) = define env args
 eval env (ValList (Atom "cond" : args)) = cond env args
 eval env (ValList (Atom "if" : args)) = ifStatement env args
---eval env (ValList [Atom "if", condition, validated, other]) = do
---  condEvaluated <- eval env condition
---  case condEvaluated of
---    (ValBool True, newEnv) -> eval newEnv validated
---    _ -> eval env other
+eval env (ValList (Atom "let" : args)) = letStatement env args
 eval env (ValList (Atom "lambda" : args)) = lambda env args
---eval env (ValList (Atom func : args)) = trace (show env) mapM (eval env) args >>= apply func env . map fst
 eval env (ValList (func : args)) = evalFunc env (ValList (func : args))
 eval _ syntaxError = throw $ KeywordError syntaxError
 
@@ -108,7 +103,7 @@ define _ [] = throw $ NbArgsError "define" 2 []
 define _ [a] = throw $ NbArgsError "define" 2 [a]
 define env [Atom name, expr] = do
     (result, _) <- eval env expr
-    trace (show env) return (Atom name, addEnvVar env name result)
+    return (Atom name, addEnvVar env name result)
 define env [ValList (Atom name : args), body] = do
   return (Atom name, addEnvVar env name (Func env (LispFct fct)))
   where
@@ -125,7 +120,7 @@ define _ args = throw $ NbArgsError "define" 2 args
 
 -- TODO: refacto
 getArgNames :: [Identifier] -> [LispVal] -> ThrowsError [Identifier]
-getArgNames acc [] = trace (show acc) return acc
+getArgNames acc [] = return acc
 getArgNames acc ((Atom ident) : exprs) = getArgNames (acc ++ [ident]) exprs
 getArgNames _ (expr : _) = throw . SyntaxError $ "Invalid argument identifier `" ++ show expr ++ "` in lambda expression"
 
@@ -147,7 +142,7 @@ lambda _ args = throw $ NbArgsError "lambda" 2 args
 
 lambda' :: Env -> [Identifier] -> LispVal -> (Env -> [LispVal] -> ThrowsError LispVal)
 lambda' env argNames expr callerEnv args
-  | length argNames /= length args = trace (show argNames) throw $ NbArgsError "#<procedure>" (genericLength args) args
+  | length argNames /= length args = throw $ NbArgsError "#<procedure>" (genericLength args) args
   | otherwise = do
     (result, _) <- eval internEnv expr
     return result
@@ -167,6 +162,29 @@ ifStatement env [condition, validated, other] = do
     (ValBool True, newEnv) -> eval newEnv validated
     _ -> eval env other
 ifStatement _ a = throw $ NbArgsError "if" 3 a
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- let statement. Evaluates the given expression with the specified name
+-- bindings, possibly shadowing any previously-bound variable names.
+-- Syntax: (let ((<name> <value>) ...) <expr>)
+letStatement :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
+letStatement _ [] = throw $ NbArgsError "let" 2 []
+letStatement _ [a] = throw $ NbArgsError "let" 2 [a]
+letStatement env [bindingsList, expr] = do
+    bindings <- parseLetBindings env bindingsList
+    (result, _) <- eval (mergeEnvs bindings env) expr
+    return (result, env)
+letStatement _ args =  throw $ NbArgsError "let" 2  args
+
+mapBinding :: Env -> LispVal -> ThrowsError (Identifier, LispVal)
+mapBinding env (ValList [Atom name, expr]) = do
+    (result, _) <- eval env expr
+    return (name, result)
+mapBinding _ _ = throw $ SyntaxError "Malformed let expression."
+
+parseLetBindings :: Env -> LispVal -> ThrowsError Env
+parseLetBindings env (ValList listExpr) = addVarsToEnv env <$> mapM (mapBinding env) listExpr
+parseLetBindings _ _ = throw $ SyntaxError "Malformed let expression."
 
 
 -- | -----------------------------------------------------------------------------------------------------------------

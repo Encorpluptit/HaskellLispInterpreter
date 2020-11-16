@@ -2,7 +2,6 @@ module File where
 
 import Control.Exception
 import PrintUtils
-import GHC.IO.Exception (ioe_description, ioe_filename, ioe_location)
 
 loadFile :: String -> IO String
 loadFile fp = do

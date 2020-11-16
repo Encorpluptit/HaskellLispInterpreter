@@ -4,7 +4,6 @@ import Data.List (isPrefixOf)
 import System.Console.Haskeline
 import Control.Monad.IO.Class
 import DataTypes
-import Debug.Trace
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
