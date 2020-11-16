@@ -1,5 +1,5 @@
 module Options
-  ( Opts(..),
+  ( Opts (..),
     defaultOpts,
   )
 where

@@ -29,7 +29,7 @@ parseLispVal =
     <|> parseLispValAtom
     <|> parseLispValString
     <|> parseQuoted
---    <|> parseLispList
+    --    <|> parseLispList
     <|> parseLispValList
     <|> parseLispValDottedList
 
@@ -67,8 +67,8 @@ parseLispValAtom = do
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- List:
---parseLispList :: Parser LispVal
---parseLispList = do
+-- parseLispList :: Parser LispVal
+-- parseLispList = do
 --  _ <- parseSpacedChar '('
 --  x <- parseLispValList <|> parseLispValDottedList
 --  _ <- parseSpacedChar ')'
@@ -89,7 +89,6 @@ parseLispValList = do
   x <- ValList <$> many (parseLispVal <* many parseSpaceLike)
   _ <- parseSpacedChar ')'
   return x
-
 
 parseLispValDottedList :: Parser LispVal
 parseLispValDottedList = do

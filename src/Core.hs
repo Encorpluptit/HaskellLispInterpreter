@@ -23,7 +23,7 @@ halCore opts@(Opts replOpt _) files
   | otherwise = Control.Monad.void manageFiles
   where
     manageFiles = processFiles filePrinter files emptyEnv
-    filePrinter = getPrintFct opts{repl=False}
+    filePrinter = getPrintFct opts {repl = False}
     printer = getPrintFct opts
 
 -- | -----------------------------------------------------------------------------------------------------------------

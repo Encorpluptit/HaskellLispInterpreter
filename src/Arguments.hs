@@ -1,10 +1,10 @@
 module Arguments where
 
+import Options
+import PrintUtils
 import System.Console.GetOpt
 import System.Environment
 import System.Exit
-import PrintUtils
-import Options
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Using System.Console.GetOpt to parse program arguments.
@@ -20,7 +20,7 @@ manageArgs args = do
   opts <- foldl (>>=) (return defaultOpts) actions
   return (opts, fileNames, errors)
   where
---    (actions, fileNames, errors) = getOpt RequireOrder flags args
+    --    (actions, fileNames, errors) = getOpt RequireOrder flags args
     (actions, fileNames, errors) = getOpt Permute flags args
 
 -- | -----------------------------------------------------------------------------------------------------------------

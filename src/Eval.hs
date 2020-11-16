@@ -3,11 +3,10 @@ module Eval
   )
 where
 
+import Builtins
 import Control.Applicative
 import Data.List (genericLength)
-import Builtins
 import DataTypes
-import Debug.Trace
 
 eval :: Env -> LispVal -> ThrowsError (LispVal, Env)
 eval env val@(ValString _) = return (val, env)
@@ -24,7 +23,6 @@ eval env (ValList (func : args)) = evalFunc env (ValList (func : args))
 eval _ syntaxError = throw $ KeywordError syntaxError
 
 -- | -----------------------------------------------------------------------------------------------------------------
---
 evalFunc :: Env -> LispVal -> ThrowsError (LispVal, Env)
 evalFunc env (ValList (headExpr : argExprs)) = do
   (result, _) <- eval env headExpr
@@ -43,16 +41,14 @@ evalFunc' env (Func closure (LispFct f)) args = do
   return (result, env)
 evalFunc' _ notFunc _ = throw $ NotFunction notFunc
 
-
-
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Old evaluation function, kept for refactoring later
 apply :: String -> Env -> [LispVal] -> ThrowsError (LispVal, Env)
 apply func env args = case lookup func builtins of
-    Just f -> do
-        res <- f args
-        return (res, env)
-    Nothing -> throw . NotFunction $ Atom func
+  Just f -> do
+    res <- f args
+    return (res, env)
+  Nothing -> throw . NotFunction $ Atom func
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Get Variable from env (Value or Func) or search in builtins
@@ -90,8 +86,7 @@ cond env (ValList [condition, validated] : other) = do
   res <- unpackBoolean "cond" resEval
   (if res then eval env validated else cond env other)
 -- TODO: change Error ?
-cond _ a = trace (show a) throw $ SyntaxError "Error in cond"
-
+cond _ a = throw $ SyntaxError "Error in cond"
 
 -- | -----------------------------------------------------------------------------------------------------------------
 --  define keyword used for creating global variable name bindings. This
@@ -102,8 +97,8 @@ define :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 define _ [] = throw $ NbArgsError "define" 2 []
 define _ [a] = throw $ NbArgsError "define" 2 [a]
 define env [Atom name, expr] = do
-    (result, _) <- eval env expr
-    return (Atom name, addEnvVar env name result)
+  (result, _) <- eval env expr
+  return (Atom name, addEnvVar env name result)
 define env [ValList (Atom name : args), body] = do
   return (Atom name, addEnvVar env name (Func env (LispFct fct)))
   where
@@ -171,21 +166,20 @@ letStatement :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
 letStatement _ [] = throw $ NbArgsError "let" 2 []
 letStatement _ [a] = throw $ NbArgsError "let" 2 [a]
 letStatement env [bindingsList, expr] = do
-    bindings <- parseLetBindings env bindingsList
-    (result, _) <- eval (mergeEnvs bindings env) expr
-    return (result, env)
-letStatement _ args =  throw $ NbArgsError "let" 2  args
+  bindings <- parseLetBindings env bindingsList
+  (result, _) <- eval (mergeEnvs bindings env) expr
+  return (result, env)
+letStatement _ args = throw $ NbArgsError "let" 2 args
 
 mapBinding :: Env -> LispVal -> ThrowsError (Identifier, LispVal)
 mapBinding env (ValList [Atom name, expr]) = do
-    (result, _) <- eval env expr
-    return (name, result)
+  (result, _) <- eval env expr
+  return (name, result)
 mapBinding _ _ = throw $ SyntaxError "Malformed let expression."
 
 parseLetBindings :: Env -> LispVal -> ThrowsError Env
 parseLetBindings env (ValList listExpr) = addVarsToEnv env <$> mapM (mapBinding env) listExpr
 parseLetBindings _ _ = throw $ SyntaxError "Malformed let expression."
-
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Boolean helpers used in cond to not define this at top-level

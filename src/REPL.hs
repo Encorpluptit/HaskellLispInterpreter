@@ -1,9 +1,9 @@
 module REPL where
 
-import Data.List (isPrefixOf)
-import System.Console.Haskeline
 import Control.Monad.IO.Class
+import Data.List (isPrefixOf)
 import DataTypes
+import System.Console.Haskeline
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
@@ -14,9 +14,11 @@ launchRepl printFct env = runInputT replSettings $ loop printFct env
 
 loop :: (Env -> String -> IO Env) -> Env -> InputT IO ()
 loop printer env = getInputLine "|λ〉" >>= inputHandler
-  where inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
-        inputHandler (Just "quit") = outputStrLn "Bye."
-        inputHandler (Just input)  = liftIO (printer env input) >>= loop printer
+  where
+    inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
+    inputHandler (Just "quit") = outputStrLn "Bye."
+    inputHandler (Just input) = liftIO (printer env input) >>= loop printer
+
 -- | TODO: remove when Env Debug finished
 --        inputHandler (Just input)  = do
 --            newEnv <- liftIO (printer env input)
@@ -50,7 +52,8 @@ replSettings =
 --      - (String -> m [Completion]): Function to produce a list of possible completions.
 halAutoComplete :: CompletionFunc IO
 halAutoComplete = fallbackCompletion completeScheme completeFilename
-    where completeScheme = completeWord Nothing "( \t" $ return . searchSchemeKeywords
+  where
+    completeScheme = completeWord Nothing "( \t" $ return . searchSchemeKeywords
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Construct a list of possible Completion if input string is prefix of schemeKeyWords.

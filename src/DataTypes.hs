@@ -61,11 +61,11 @@ data HALError
   | NotFunction LispVal
   | KeywordError LispVal
   | SyntaxError String
-    deriving (Eq)
+  deriving (Eq)
 
 --    deriving (Eq)
--- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 
+-- | FileError     String          -- file don't exist ? Wrong Syntax in file ?
 instance Show HALError where
   show = showHALError
 
@@ -127,7 +127,7 @@ instance Show LispFct where
   show _ = "#<procedure>"
 
 instance Eq LispFct where
-   _ == _ = False
+  _ == _ = False
 
 data LispVal
   = Atom String
@@ -137,7 +137,7 @@ data LispVal
   | ValBool Bool
   | ValString String
   | Func Env LispFct
-    deriving (Eq)
+  deriving (Eq)
 
 --  deriving (Show)
 
@@ -184,7 +184,7 @@ newtype EnvVar = EnvVar (Map.Map Identifier LispVal)
   deriving (Show)
 
 newtype Env = Env (Map.Map Identifier LispVal)
-    deriving (Eq)
+  deriving (Eq)
 
 --instance Show Env where
 --  show (Env env) = "Env : " ++ show (Map.keys env)
