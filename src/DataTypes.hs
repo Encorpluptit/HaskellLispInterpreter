@@ -151,6 +151,8 @@ instance Show LispVal where
   show (ValString str) = "ValString \"" ++ str ++ "\""
   show (Func _ func) = "Func {Intern Env} " ++ show func
 
+
+
 -- | -----------------------------------------------------------------------------------------------------------------
 -- TODO: Double, rational, etc. implementation via LispNum ?
 -- | -----------------------------------------------------------------------------------------------------------------

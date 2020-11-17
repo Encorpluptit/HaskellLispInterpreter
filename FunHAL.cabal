@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e40070dcb374e624bdacd6d939aa9e3d7330ea21d34d89e961cc4da36d7b15f6
+-- hash: 2d9f82e957eb047f834d96b83fbaca13240fc572d66441c77350b0f0aa41ba06
 
 name:           FunHAL
 version:        0.1.0.0
@@ -56,7 +56,7 @@ executable hal
       Paths_FunHAL
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -optc-O3 -O2
   build-depends:
       FunHAL
     , base >=4.7 && <5

@@ -8,6 +8,7 @@ import Control.Applicative
 import DataTypes
 import Eval
 import LibParsing
+import Debug.Trace
 
 parseExpr :: Env -> String -> ThrowsError (LispVal, Env)
 --parseExpr str = case runParser (parseManySpaced parseLispVal) str of
@@ -18,8 +19,27 @@ parseExpr env str = case runParser parseLispVal str of
   -- TODO: add Env management
   Right (a, []) -> eval env a
   Right (a, "\n") -> eval env a
-  Right (a, xs) -> throw $ ParsingError a xs
-  Left msg -> throw $ UnknownError msg
+  Right (a, xs) -> case all isSep xs of
+    True -> throw $ ParsingError a xs
+    False -> throw $ ParsingError a xs
+        where
+  Left msg -> trace ("ICI") throw $ UnknownError msg
+
+isSep :: Char -> Bool
+isSep c
+    | c `elem` " \t\n" = True
+    | otherwise = False
+--parseExpr :: Env -> String -> ThrowsError (LispVal, Env)
+----parseExpr str = case runParser (parseManySpaced parseLispVal) str of
+--parseExpr env str = case runParser parseLispVal str of
+--  --    Right (a, [])   -> Right (eval a, [])
+--  --    Left msg        -> Left msg
+--  --  TODO: Add throw unknown Error when Right (a, as) ??
+--  -- TODO: add Env management
+--  Right (a, []) -> eval env a
+--  Right (a, "\n") -> eval env a
+--  Right (a, xs) -> throw $ ParsingError a xs
+--  Left msg -> throw $ UnknownError msg
 
 parseLispVal :: Parser LispVal
 parseLispVal =

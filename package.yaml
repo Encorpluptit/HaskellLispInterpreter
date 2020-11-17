@@ -40,6 +40,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -optc-O3
+    - -O2
     dependencies:
     - FunHAL
 
