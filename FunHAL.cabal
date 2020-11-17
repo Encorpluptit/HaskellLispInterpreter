@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3b314131a8b43b0eac7f1f1508cb91a3900343e8f0f795c9faa804ed7e5b990d
+-- hash: e40070dcb374e624bdacd6d939aa9e3d7330ea21d34d89e961cc4da36d7b15f6
 
 name:           FunHAL
 version:        0.1.0.0
@@ -67,6 +67,7 @@ test-suite FunHAL-tests
   main-is: Spec.hs
   other-modules:
       EvalTestsSpec
+      FullProgramsSpec
       LibParsingSpec
       QuickCheckTests
       Paths_FunHAL

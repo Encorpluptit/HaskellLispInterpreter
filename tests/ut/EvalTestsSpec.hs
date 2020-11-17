@@ -9,6 +9,9 @@ spec = describe "Eval Testing" $ do
   testEquals
   testIfs
   testArithmetic
+  testsLetStatement
+  testsDefineFuncs
+  smallFuncsToAdd
 
 expectRightValue :: LispVal -> Either HALError (LispVal, Env) -> Bool
 expectRightValue expected res = case res of
@@ -1188,6 +1191,23 @@ testIfs =
           ("(if (> 2 foo) #t #f)", Atom "#f")
         ]
 
+    it "(define foo 2) && (define bar 2) && (if (> foo bar) #t #f) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(if (> foo bar) #t #f)", Atom "#f")
+        ]
+
+    it "(define foo 2) && (define bar 2) && (if (> bar foo) #t #f) \t->\t #f" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define foo 2)", Atom "foo"),
+          ("(define bar 2)", Atom "bar"),
+          ("(if (> bar foo) #t #f)", Atom "#f")
+        ]
+
+
 
     it "(if (> 2 2) 1 2) \t->\t 2" $ do
       chainAssertion
@@ -1220,8 +1240,9 @@ testIfs =
       chainAssertion
         emptyEnv
         [ ("(define foo 1)", Atom "foo"),
-          ("(if (> 2 2) foo 2)", ValNum 1)
+          ("(if (> 2 2) foo 2)", ValNum 2)
         ]
+
 
 ----
 
@@ -1877,3 +1898,32 @@ testsLetStatement =
   describe "Tests for let" $ do
     it "(eq? 2 2) \t->\t #t" $ do
       pendingWith ""
+
+testsDefineFuncs :: Spec
+testsDefineFuncs =
+  describe "Tests for define with functions" $ do
+    -- TODO: MOAR MOAR TESTS
+    it "(define add3 (lambda (x) (+ x 3))) && (add3 3) && (add3 3) \t->\t 3" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define add3 (lambda (x) (+ x 3)))", Atom "add3"),
+          ("(add3 3)", ValNum 6)
+        ]
+    -- TODO: MOAR MOAR TESTS
+    it "(define first car) && (first '(1 2)) \t->\t #t" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(define first car)", Atom "first"),
+          ("(first '(1 2))", ValNum 1)
+        ]
+
+smallFuncsToAdd :: Spec
+smallFuncsToAdd =
+  describe "Tests for define with functions" $ do
+    -- TODO: MOAR MOAR TESTS
+    it "(+ (* 3 3) 10) \t->\t 19" $ do
+      chainAssertion
+        emptyEnv
+        [ ("(+ (* 3 3) 10)", ValNum 19)
+        ]
+
