@@ -73,17 +73,10 @@ evalArgs acc env (first : left) = do
 --  Syntax: (cond <expr> <expr> ...)
 -- TODO: getNewEnv for each eval ? (nested envs ?)
 cond :: Env -> [LispVal] -> ThrowsError (LispVal, Env)
-cond env nature@((ValList [Atom a, validated]) : other)
-  | a == "#t" = parseBool isTrueExpr
-  | a == "#f" = parseBool isFalseExpr
-  | otherwise = cond env nature
-  where
-    parseBool fct = do
-      (res, _) <- eval env validated
-      (if fct res then return (res, env) else cond env other)
+cond env [] = return (ValBool False, env)
 cond env (ValList [condition, validated] : other) = do
   (resEval, _) <- eval env condition
-  res <- unpackBoolean "cond" resEval
+  res <- isTrueExpr resEval
   (if res then eval env validated else cond env other)
 -- TODO: change Error ?
 cond _ a = throw $ SyntaxError "Error in cond"
@@ -99,8 +92,7 @@ define _ [a] = throw $ NbArgsError "define" 2 [a]
 define env [Atom name, expr] = do
   (result, _) <- eval env expr
   return (Atom name, addEnvVar env name result)
-define env [ValList (Atom name : args), body] = do
-  return (Atom name, addEnvVar env name (Func env (LispFct fct)))
+define env [ValList (Atom name : args), body] = return (Atom name, addEnvVar env name (Func env (LispFct fct)))
   where
     fct internEnv callArgs
       | length callArgs /= length args = throw $ NbArgsError name (genericLength args) callArgs
@@ -183,13 +175,11 @@ parseLetBindings _ _ = throw $ SyntaxError "Malformed let expression."
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Boolean helpers used in cond to not define this at top-level
-isTrueExpr :: LispVal -> Bool
-isTrueExpr (ValBool True) = True
-isTrueExpr (ValList []) = False
-isTrueExpr (ValNum 0) = False
-isTrueExpr (ValNum _) = True
-isTrueExpr (ValList _) = True
-isTrueExpr _ = False
-
-isFalseExpr :: LispVal -> Bool
-isFalseExpr = not . isTrueExpr
+isTrueExpr :: LispVal -> ThrowsError Bool
+isTrueExpr (ValBool True) = return True
+isTrueExpr (Atom "#t") = return True
+isTrueExpr (ValList []) = return False
+isTrueExpr (ValNum 0) = return False
+isTrueExpr (ValNum _) = return True
+isTrueExpr (ValList _) = return True
+isTrueExpr a = return False
