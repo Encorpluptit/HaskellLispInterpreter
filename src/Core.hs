@@ -19,7 +19,7 @@ import REPL
 --  * Print AST or Value if showTree option in Opts (Stored in printFct).
 halCore :: Opts -> [String] -> IO ()
 halCore opts@(Opts replOpt _) files
-  --  | replOpt = manageFiles >>= launchRepl printer
+  | replOpt = manageFiles >>= launchRepl (printer True)
   | otherwise = Control.Monad.void manageFiles
   where
     manageFiles = processFiles filePrinter files emptyEnv
@@ -43,11 +43,15 @@ processFiles printFct (x : xs) env = do
   parseEntireFile printFct (lines file) env >>= processFiles printFct xs
 
 parseEntireFile :: (Bool -> Env -> String -> IO Env) -> [String] -> Env -> IO Env
-parseEntireFile _ [] _ = writeErrorAndExit "EMPTY FILE CONNARD"
+parseEntireFile _ [] _ = writeErrorAndExit "Empty File."
 parseEntireFile printFct [x] env = printFct True env x
 parseEntireFile printFct (x : y : xs) env = case runParser parseLispVal x of
   Left _ -> parseEntireFile printFct ((x ++ y) : xs) env
-  Right (_, []) -> printFct False env x >>= parseEntireFile printFct (y : xs)
+  Right (_, []) -> case all isSep y of
+    True -> case (xs) of
+      [] -> printFct True env x
+      _ -> printFct False env x >>= parseEntireFile printFct (xs)
+    False -> printFct False env x >>= parseEntireFile printFct (y : xs)
   Right (_, rest) -> writeErrorAndExit ("MDR T MOVAIS" ++ show rest)
 
 -- | -----------------------------------------------------------------------------------------------------------------

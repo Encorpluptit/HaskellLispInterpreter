@@ -1,6 +1,7 @@
 module Parser
   ( parseExpr,
     parseLispVal,
+    isSep
   )
 where
 
@@ -23,7 +24,7 @@ parseExpr env str = case runParser parseLispVal str of
     True -> throw $ ParsingError a xs
     False -> throw $ ParsingError a xs
         where
-  Left msg -> trace ("ICI") throw $ UnknownError msg
+  Left msg -> throw $ UnknownError msg
 
 isSep :: Char -> Bool
 isSep c

@@ -146,6 +146,8 @@ isAtom _        = ValBool False
 -- Binary Operator helper(s)
 unpackNumeric :: String -> LispVal -> ThrowsError Integer
 unpackNumeric _ (ValNum nb) = return nb
+unpackNumeric "div" (ValList (_:ValNum 0:_)) = throw $ TypeError "Div by zero" (ValNum 0)
+unpackNumeric "mod" (ValList (_:ValNum 0:_)) = throw $ TypeError "Mod by zero" (ValNum 0)
 unpackNumeric s (ValList [n]) = unpackNumeric s n
 -- TODO: improve error reporting or manage several types ? (Improve TypeError or remove "procedure" arg here and in Boolean Expr helpers).
 unpackNumeric procedure value   = throw $ TypeError "Mismatch Value when unpacking Integer" value
