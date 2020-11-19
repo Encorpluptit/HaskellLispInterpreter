@@ -3,9 +3,15 @@ module HalCore
   )
 where
 
-import PrintUtils
+import FileManagement
+import HalDataTypes
+import HalError
 import HalOptions
 import HalREPL
+import LispEvaluation
+import LispExpression
+import PrintUtils
+import Control.Monad (void)
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Core function:
@@ -14,15 +20,32 @@ import HalREPL
 --  * Print AST or Value if showTree option in Opts (Stored in printFct).
 halCore :: Opts -> [String] -> IO ()
 halCore opts@(Opts replOpt _) files
-  | replOpt = launchRepl
-  | otherwise = printStrAndExit "Not implemented.\n"
---  | replOpt = manageFiles >>= launchRepl (printer True)
---  | otherwise = Control.Monad.void manageFiles
---  where
---    manageFiles = processFiles filePrinter files emptyEnv
---    filePrinter = getPrintFct opts {repl = False}
---    printer = getPrintFct opts
+  | replOpt = evalFiles >>= \(newEnv, _) -> launchRepl opts newEnv
+  | otherwise = Control.Monad.void evalFiles
+    where evalFiles = processFiles emptyEnv Nothing files
+
+processFiles :: Env -> Maybe HalExpr -> [String] -> IO (Env, Maybe HalExpr)
+processFiles env oldExpr [] = return (env, oldExpr)
+processFiles env oldExpr (file : args) =
+  evalFile file env >>= \res -> case unpackError res of
+    Right (newEnv, Nothing) -> processFiles newEnv oldExpr args
+    Right (newEnv, newExpr) -> processFiles newEnv newExpr args
+    Left err -> writeErrorAndExit err
+
+evalFile :: String -> Env -> IO (ThrowsHalExprError (Env, Maybe HalExpr))
+evalFile file env = evalContent <$> loadFile file
+  where
+    evalContent str = case parseContent str of
+      Right a -> evalLispExprList env a
+      Left err -> throw $ FileError err
+
+--getPrintExpr (Opts _ True) value = printExpr $ show value
+--getPrintExpr (Opts _ False) value = printFct value
 --
+--
+--printExpr :: Monad m => (String -> m()) -> String -> m ()
+--printExpr printFct = printFct
+
 ---- | -----------------------------------------------------------------------------------------------------------------
 ---- Process file list given in program arguments:
 ----  * Call getArgsFiles that read files

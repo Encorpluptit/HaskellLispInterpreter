@@ -1,4 +1,68 @@
 module LispBuiltins where
+--module LispBuiltins
+--( builtins,
+--)
+--where
+
+--type BinaryOperator a = (a -> a -> a)
+--
+--builtins :: [(String, AST)]
+--builtins =
+--  [ ("+", Builtin (Built (bOpp (+) 0))),
+--    ("*", Builtin (Built (bOpp (*) 1))),
+--    ("-", Builtin (Built (bOpp (-) 0))),
+--    ("div", Builtin (Built (bDiv div))),
+--    ("mod", Builtin (Built (bDiv mod))),
+--    ("atom?", Builtin (Built bAt)),
+--    ("eq?", Builtin (Built bEq)),
+--    ("<", Builtin (Built bInf)),
+--    ("cons", Builtin (Built bCons)),
+--    ("car", Builtin (Built bCar)),
+--    ("cdr", Builtin (Built bCdr))
+--  ]
+--
+--defaultEnv :: Env
+--defaultEnv = Map.fromList $ builtinsAryth ++ builtinsPreds ++ builtinsLists
+
+--bDiv :: (Int -> Int -> Int) -> [AST] -> Either String AST
+--bDiv _ [Val (Num a), Val (Num 0)] = Left "division by zero"
+--bDiv f [Val (Num a), Val (Num b)] = return $ Val (Num (f a b))
+--
+--bOpp :: (Int -> Int -> Int) -> Int -> [AST] -> Either String AST
+--bOpp fct init [] = return $ Val (Num init)
+--bOpp fct init (Val (Num a) : xs) =
+--  (\(Val (Num b)) -> Val (Num (fct a b))) <$> bOpp fct init xs
+--
+--bAt :: [AST] -> Either String AST
+--bAt [Val Cons {}] = return (Bool False)
+--bAt _ = return (Bool True)
+--
+--bEq :: [AST] -> Either String AST
+--bEq [Bool b1, Bool b2] = return (Bool (b1 == b2))
+--bEq [Val Nil, Val Nil] = return (Bool True)
+--bEq [Val (Num a), Val (Num b)] | a == b = return (Bool True)
+--bEq [Val (Symb a), Val (Symb b)] | a == b = return (Bool True)
+--bEq [_, _] = return (Bool False)
+--bEq lst = Left ("error executing eq? (bad args): " ++ show lst)
+--
+--bInf :: [AST] -> Either String AST
+--bInf [Val (Num a), Val (Num b)] | a < b = return $ Bool True
+--bInf [_, _] = return $ Bool False
+--bInf lst = Left ("error executing '<' (bad args): " ++ show lst)
+--
+--bCons :: [AST] -> Either String AST
+--bCons [Val e1, Val e2] = return $ Val (Cons e1 e2)
+--bCons lst = Left ("cons: Bad args: " ++ show lst)
+--
+--bCar :: [AST] -> Either String AST
+--bCar [Val (Cons e1 _)] = return $ Val e1
+--bCar l = Left ("car: Bad args: " ++ show l)
+--
+--bCdr :: [AST] -> Either String AST
+--bCdr [Val (Cons _ e2)] = return $ Val e2
+--bCdr l = Left ("cdr: Bad args: " ++ show l)
+
+
 --module Builtins
 --(
 --    getBuiltins

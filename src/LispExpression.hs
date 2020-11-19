@@ -1,4 +1,9 @@
-module LispExpression where
+module LispExpression
+  ( parseContent,
+    parseLispExpr,
+    LispExpr(..),
+  )
+where
 
 import Control.Applicative
 import HalError
@@ -11,38 +16,22 @@ data LispExpr
   | Cons LispExpr LispExpr
   | Nil
   deriving (Eq, Ord, Show)
---  deriving (Eq, Ord)
 
---instance Show LispExpr where
---  show (Number nb) = show nb
---  show (Atom atom) = atom
---  show (Cons first Nil) = "(" ++ show first ++ ")"
---  show (Cons first second) = "(" ++ show first ++ " . " ++ show second ++ ")"
---  show Nil = "()"
+showLispExpr :: LispExpr -> String
+showLispExpr (Number nb) = show nb
+showLispExpr (Atom atom) = atom
+showLispExpr (Cons first Nil) = "(" ++ showLispExpr first ++ ")"
+showLispExpr (Cons first second) = "(" ++ showLispExpr first ++ " . " ++ showLispExpr second ++ ")"
+showLispExpr Nil = "()"
 
---  show (Cons first second) = "(" ++ show first ++ " . " ++ show second ++ ")"
---    where
---      showCons (Cons first Nil) = show first ++ ")"
---      showCons (Cons first second) = show first ++ " " ++ showCons second
---      showCons Nil = ")"
---      showCons cons = ". " ++ show cons ++ ")"
-
---instance Read LispExpr where
---  readsPrec _ = parseLispVal
-
-type ThrowsLispExprError = ThrowsError LispExpr
-
-parseContent :: String -> ThrowsLispExprError [LispExpr]
+parseContent :: String -> Either String [LispExpr]
 parseContent "" = return []
 parseContent s = case runParser (parseManySpaced parseLispExpr) s of
   Right (expr, left) -> (expr :) <$> parseContent left
-  _ -> throw $ FileError $ "Parsing Failed when parsing: " ++ s
+  _ -> Left $ "Parsing Failed when parsing: " ++ s
 
 parseLispExpr :: Parser LispExpr
-parseLispExpr =
-  parseCons
-    <|> parseLispNumber
-    <|> parseAtom
+parseLispExpr = parseCons <|> parseLispExprNumber <|> parseAtom
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Cons:
@@ -52,8 +41,6 @@ parseCons = parseSpacedChar '(' *> nextCons
     nextCons = Cons <$> car <*> cdr
     car = parseManySpaced parseLispExpr
     cdr = nextCons <|> (Nil <$ parseSpacedChar ')')
-
---parseCons :: Parser LispExpr
 --parseCons = Cons <$> car <*> cdr
 --    where
 --        car = parseManySpaced parseLispExpr
@@ -61,8 +48,9 @@ parseCons = parseSpacedChar '(' *> nextCons
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Number:
-parseLispNumber :: Parser LispExpr
-parseLispNumber = Number . LispInt <$> parseInteger
+parseLispExprNumber :: Parser LispExpr
+parseLispExprNumber = Number <$> parseLispNumber
+--parseLispExprNumber = Number . LispInt <$> parseInteger
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Atom:

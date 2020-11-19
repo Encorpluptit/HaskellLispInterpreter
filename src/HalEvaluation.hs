@@ -1,5 +1,17 @@
 module HalEvaluation where
 
+
+--compile :: Env -> LispExpr -> Either String HalExpr
+--compile env (Cons (Atom rand) rator) = compSpe env rand rator
+--compile env (Cons op rest) = FunCall <$> compile env op <*> toList env rest
+--compile _ (Atom "#t") = return $ Bool True
+--compile _ (Atom "#f") = return $ Bool False
+--compile env (Atom name) = case Map.lookup name env of
+--  Just Lambda {} -> Right (Ref name)
+--  Just val -> Right val
+--  Nothing -> Right (Ref name)
+--compile _ e = Right (Value e)
+
 --module Eval
 --  ( eval,
 --  )

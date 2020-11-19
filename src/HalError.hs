@@ -74,4 +74,8 @@ throw err = HandleError $ Left err
 unpackError :: ThrowsError a b -> Either (HALError a) b
 unpackError (HandleError val) = val
 
+--liftError :: ThrowsError a b -> c -> ThrowsError c b
+--liftError (HandleError val) = liftA
 
+--class (Monad m) => (ThrowsError m) where
+--    liftError :: IO a -> m a
