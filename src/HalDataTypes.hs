@@ -14,6 +14,9 @@ newtype Built = Built ([HalExpr] -> ThrowsHalExprError HalExpr)
 
 type ThrowsHalExprError = ThrowsError HalExpr
 
+unpackHalExprError :: ThrowsHalExprError b -> Either (HALError HalExpr) b
+unpackHalExprError (HandleError val) = val
+
 instance Show Built where
   show _ = "#<procedure>"
 
@@ -25,5 +28,8 @@ data HalExpr
   | FunCall HalExpr [HalExpr]
   | If HalExpr HalExpr HalExpr
   | Ref String
-  | Def String HalExpr
+  | Define String HalExpr
   deriving (Show)
+
+showHalExpr :: HalExpr -> String
+showHalExpr _ = "TO IMPLEMENT"

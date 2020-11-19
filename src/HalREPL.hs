@@ -4,6 +4,7 @@ import Control.Monad.IO.Class
 import Data.List (isPrefixOf)
 import System.Console.Haskeline
 import HalOptions
+import LispEvaluation
 import HalDataTypes
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -12,15 +13,18 @@ import HalDataTypes
 --  * loop: Core of REPL fct.
 --launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
 launchRepl :: Opts -> Env -> IO ()
-launchRepl opts env = runInputT replSettings $ loop opts
+launchRepl opts env = runInputT replSettings $ loop opts env
 
-loop :: Opts -> InputT IO ()
-loop opts = getInputLine "|λ〉" >>= inputHandler
+loop :: Opts -> Env -> InputT IO ()
+loop opts env = getInputLine "|λ〉" >>= inputHandler
   where
     inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
     inputHandler (Just "quit") = outputStrLn "Bye."
-    inputHandler (Just input) = outputStrLn input >> loop opts
---    inputHandler (Just input) = liftIO (printer env input) >>= loop printer
+    inputHandler (Just "(debug)") = outputStrLn "Debug Mode!" >> loop opts{showTree = not $ showTree opts} env
+--    inputHandler (Just input) = outputStrLn input >> loop opts env
+    inputHandler (Just input) = outputStrLn input >> loop opts env
+
+
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:

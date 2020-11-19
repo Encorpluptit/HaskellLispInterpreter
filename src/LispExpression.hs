@@ -1,11 +1,12 @@
 module LispExpression
   ( parseContent,
-    parseLispExpr,
-    LispExpr(..),
+    printLispExpr,
+    LispExpr (..),
   )
 where
 
 import Control.Applicative
+import Data.Functor
 import HalError
 import LibParsing
 import LispNumbers
@@ -16,6 +17,10 @@ data LispExpr
   | Cons LispExpr LispExpr
   | Nil
   deriving (Eq, Ord, Show)
+
+printLispExpr :: Bool -> LispExpr -> IO ()
+printLispExpr False expr = putStrLn $ showLispExpr expr
+printLispExpr True expr = print expr
 
 showLispExpr :: LispExpr -> String
 showLispExpr (Number nb) = show nb
@@ -31,7 +36,7 @@ parseContent s = case runParser (parseManySpaced parseLispExpr) s of
   _ -> Left $ "Parsing Failed when parsing: " ++ s
 
 parseLispExpr :: Parser LispExpr
-parseLispExpr = parseCons <|> parseLispExprNumber <|> parseAtom
+parseLispExpr = parseCons <|> parseLispExprNumber <|> parseManySpaced parseAtom <|> parseQuoted <|> parseNil
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Cons:
@@ -41,16 +46,24 @@ parseCons = parseSpacedChar '(' *> nextCons
     nextCons = Cons <$> car <*> cdr
     car = parseManySpaced parseLispExpr
     cdr = nextCons <|> (Nil <$ parseSpacedChar ')')
---parseCons = Cons <$> car <*> cdr
---    where
---        car = parseManySpaced parseLispExpr
---        cdr  =  parseCons <|> (Nil <$ parseSpacedChar ')')
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Number:
 parseLispExprNumber :: Parser LispExpr
 parseLispExprNumber = Number <$> parseLispNumber
+
 --parseLispExprNumber = Number . LispInt <$> parseInteger
+
+parseNil :: Parser LispExpr
+parseNil = parseSpacedChar '(' *> (Nil <$ parseSpacedChar ')')
+
+-- | -----------------------------------------------------------------------------------------------------------------
+-- Number:
+parseQuoted :: Parser LispExpr
+parseQuoted = Cons <$> quoted <*> expr
+  where
+    quoted = Atom "quote" <$ parseSpacedChar '\''
+    expr = Cons <$> parseLispExpr <*> return Nil
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Atom:
