@@ -1,10 +1,27 @@
-module Arguments where
+module HalOptions
+  ( Opts (..),
+    defaultOpts,
+    manageArgs
+  )
+where
 
-import Options
 import PrintUtils
 import System.Console.GetOpt
 import System.Environment
 import System.Exit
+
+data Opts = Opts
+  { repl :: Bool,
+    showTree :: Bool
+  }
+  deriving (Show)
+
+defaultOpts :: Opts
+defaultOpts =
+  Opts
+    { repl = False,
+      showTree = False
+    }
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Using System.Console.GetOpt to parse program arguments.

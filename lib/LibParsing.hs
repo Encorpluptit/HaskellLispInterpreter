@@ -293,3 +293,15 @@ instance Monad Parser where
         Left msg -> Left msg
 
 --    fail msg = Parser (\s -> Left ("Monad Parser [fail]: " ++ msg))
+
+--type ReadS a = String -> [(a,String)]
+
+--instance Read (Parser a) where
+--    readsPrec _ = Parser fct
+--      where
+--        fct s = case p1 s of
+--          Left _ -> case p2 s of
+--            Right a -> Right a
+--            r' -> r'
+--          r -> r
+

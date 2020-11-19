@@ -2,8 +2,8 @@ module Main where
 
 import System.Environment
 import PrintUtils
-import Core
-import Arguments
+import HalCore
+import HalOptions
 
 main :: IO ()
 main = do

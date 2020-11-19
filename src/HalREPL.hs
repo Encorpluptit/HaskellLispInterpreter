@@ -1,23 +1,24 @@
-module REPL where
+module HalREPL where
 
 import Control.Monad.IO.Class
 import Data.List (isPrefixOf)
-import DataTypes
 import System.Console.Haskeline
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
 --  * launchRepl: Init lopp with default settings
 --  * loop: Core of REPL fct.
-launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
-launchRepl printFct env = runInputT replSettings $ loop printFct env
+--launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
+launchRepl :: IO ()
+launchRepl = runInputT replSettings $ loop 
 
-loop :: (Env -> String -> IO Env) -> Env -> InputT IO ()
-loop printer env = getInputLine "|λ〉" >>= inputHandler
+loop :: InputT IO ()
+loop = getInputLine "|λ〉" >>= inputHandler
   where
     inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
     inputHandler (Just "quit") = outputStrLn "Bye."
-    inputHandler (Just input) = liftIO (printer env input) >>= loop printer
+    inputHandler (Just input) = outputStrLn input >> loop
+--    inputHandler (Just input) = liftIO (printer env input) >>= loop printer
 
 -- | TODO: remove when Env Debug finished
 --        inputHandler (Just input)  = do

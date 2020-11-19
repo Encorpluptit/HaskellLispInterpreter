@@ -1,7 +1,7 @@
 module EvalTestsSpec where
 
 import DataTypes
-import Parser
+import LispExpression
 import Test.Hspec
 
 spec :: Spec

@@ -2,7 +2,7 @@ module FullProgramsSpec where
 
 import DataTypes
 import Test.Hspec
-import Parser
+import LispExpression
 
 chainAssertion :: Env -> [(String, LispVal)] -> Expectation
 chainAssertion _ [] = return ()

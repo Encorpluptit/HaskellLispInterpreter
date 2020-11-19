@@ -1,4 +1,4 @@
-module File where
+module FileManagement where
 
 import Control.Exception
 import PrintUtils
