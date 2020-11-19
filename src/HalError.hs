@@ -37,6 +37,7 @@ showHALError (BuiltinError builtin args) = "Unrecognised " ++ builtin ++ " (buil
 showHALError (SyntaxError msg) = msg
 showHALError (KeywordError val) = "KeyWord Error, got : " ++ show val
 showHALError (NotFunction val) = "attempt to apply non-procedure #t" ++ " : " ++ show val
+showHALError (FileError val) = "Problem reading content of " ++ " : " ++ show val
 
 
 newtype ThrowsError a b = HandleError (Either (HALError a) b)
@@ -65,7 +66,6 @@ instance Monad (ThrowsError a) where
     case te of
       Left err -> HandleError (Left err)
       Right val -> f val
-
   return val = HandleError $ Right val
 
 throw :: HALError a -> ThrowsError a b
@@ -73,3 +73,5 @@ throw err = HandleError $ Left err
 
 unpackError :: ThrowsError a b -> Either (HALError a) b
 unpackError (HandleError val) = val
+
+
