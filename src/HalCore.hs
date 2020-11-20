@@ -18,33 +18,35 @@ import PrintUtils
 --  * Launch Repl if repl option in Opts.
 --  * Print AST or Value if showTree option in Opts (Stored in printFct).
 halCore :: Opts -> [String] -> IO ()
-halCore opts@(Opts replOpt _) files
+halCore opts@(Opts replOpt _ _) files
   | replOpt = evalFiles >>= launchRepl opts . fst
-  | otherwise = evalFiles >>= printHalExpr opts
+  | otherwise = evalFiles >> return ()
   where
-    evalFiles = processFiles opts emptyEnv Nothing files
+    evalFiles = processFiles opts files (emptyEnv, Nothing)
 
-
-processFiles :: Opts -> Env -> Maybe HalExpr -> [String] -> IO (Env, Maybe HalExpr)
-processFiles _ env oldExpr [] = return (env, oldExpr)
-processFiles opts env oldExpr (file : left) =
-  loadFile file >>= evalFileContent
+processFiles :: Opts -> [String] -> (Env, Maybe HalExpr) -> IO (Env, Maybe HalExpr)
+processFiles _ [] res = return res
+processFiles opts (file : left) result =
+  loadFile file >>= getExpr >>= evalFileContent
   where
-      evalFileContent content =  case unpackError $ evalContent opts env content of
-          Right (newEnv, Nothing) -> processFiles opts newEnv oldExpr left
-          Right (newEnv, newExpr) -> processFiles opts newEnv newExpr left
-          Left err -> writeErrorAndExit err
+    getExpr = getExprFromContent opts
+    evalFileContent content = evalContent opts result content >>= processFiles opts left
 
-printHalExpr :: Opts -> (Env, Maybe HalExpr) -> IO ()
-printHalExpr (Opts True _) _ = return ()
-printHalExpr (Opts _ _) (_, Nothing) = return ()
-printHalExpr (Opts _ False) (_, Just expr) = putStrLn $ showHalExpr expr
-printHalExpr (Opts _ True) (_, Just expr) = print expr
+getExprFromContent :: Opts -> String -> IO [LispExpr]
+getExprFromContent (Opts _ printAst debugMode) str = case unpackError $ parseContent str of
+  Left err -> writeErrorAndExit err
+  Right a -> if debugMode then printThis a else return a
+    where printThis res = mapM_ (printLispExpr printAst) res >> return res
 
-evalContent :: Opts -> Env -> String -> ThrowsHalExprError (Env, Maybe HalExpr)
-evalContent (Opts _ False) env str = case parseContent str of
-      Right a -> evalLispExprList env a
-      Left err -> throw $ FileError err
-evalContent (Opts _ True) env str = case parseContent str of
-      Right a ->  evalLispExprList env a
-      Left err -> throw $ FileError err
+
+evalContent :: Opts -> (Env, Maybe HalExpr) -> [LispExpr] -> IO (Env, Maybe HalExpr)
+evalContent (Opts _ _ False) (env, precExpr) exprs =
+  case unpackError $ evalLispExprList env exprs of
+    Right (newEnv, Nothing) -> return (newEnv, precExpr)
+    Right (newEnv, newExpr) -> return (newEnv, newExpr)
+    Left err -> writeErrorAndExit err
+evalContent (Opts _ _ True) (env, precExpr) exprs =
+  case unpackError $ evalLispExprList env exprs of
+    Right (newEnv, Nothing) -> print "Nothing" >> return (newEnv, precExpr)
+    Right (newEnv, newExpr) -> print newExpr >> return (newEnv, newExpr)
+    Left err -> writeErrorAndExit err

@@ -2,6 +2,7 @@ module LispExpression
   ( parseContent,
     printLispExpr,
     LispExpr (..),
+    ThrowsLispExprError,
   )
 where
 
@@ -18,6 +19,8 @@ data LispExpr
   | Nil
   deriving (Eq, Ord, Show)
 
+type ThrowsLispExprError = ThrowsError LispExpr
+
 printLispExpr :: Bool -> LispExpr -> IO ()
 printLispExpr False expr = putStrLn $ showLispExpr expr
 printLispExpr True expr = print expr
@@ -29,11 +32,11 @@ showLispExpr (Cons first Nil) = "(" ++ showLispExpr first ++ ")"
 showLispExpr (Cons first second) = "(" ++ showLispExpr first ++ " . " ++ showLispExpr second ++ ")"
 showLispExpr Nil = "()"
 
-parseContent :: String -> Either String [LispExpr]
+parseContent :: String -> ThrowsLispExprError [LispExpr]
 parseContent "" = return []
 parseContent s = case runParser (parseManySpaced parseLispExpr) s of
   Right (expr, left) -> (expr :) <$> parseContent left
-  _ -> Left $ "Parsing Failed when parsing: " ++ s
+  _ -> throw $ FileError $ "Parsing Failed when parsing: " ++ s
 
 parseLispExpr :: Parser LispExpr
 parseLispExpr = parseCons <|> parseLispExprNumber <|> parseManySpaced parseAtom <|> parseQuoted <|> parseNil

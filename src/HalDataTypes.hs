@@ -24,11 +24,6 @@ data HalExpr
   = Value LispExpr
   | Bool Bool
   | Builtin Built
-  | Lambda (Maybe String) [String] HalExpr Env
-  | FunCall HalExpr [HalExpr]
-  | If HalExpr HalExpr HalExpr
-  | Ref String
-  | Define String HalExpr
   deriving (Show)
 
 showHalExpr :: HalExpr -> String

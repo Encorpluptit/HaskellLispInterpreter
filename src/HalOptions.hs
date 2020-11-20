@@ -12,7 +12,8 @@ import System.Exit
 
 data Opts = Opts
   { repl :: Bool,
-    showTree :: Bool
+    printAST :: Bool,
+    debug :: Bool
   }
   deriving (Show)
 
@@ -20,7 +21,8 @@ defaultOpts :: Opts
 defaultOpts =
   Opts
     { repl = False,
-      showTree = False
+      printAST = False,
+      debug = False
     }
 
 -- | -----------------------------------------------------------------------------------------------------------------
@@ -60,10 +62,15 @@ flags =
       (NoArg $ \opt -> return opt {repl = True})
       "Start REPL (Read -> Eval -> Print -> Loop) after evaluation of other args (IE: input files)",
     Option
-      ['s']
-      ["show-tree"]
-      (NoArg $ \opt -> return opt {showTree = True})
+      ['p']
+      ["print-ast"]
+      (NoArg $ \opt -> return opt {printAST = True})
       "[DEBUG]: Showing AST instead of result.",
+    Option
+      ['d']
+      ["debug"]
+      (NoArg $ \opt -> return opt {debug = True})
+      "[DEBUG]: Showing each step of evalutation.",
     Option
       ['v']
       ["version"]

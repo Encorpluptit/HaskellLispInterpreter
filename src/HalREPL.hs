@@ -20,7 +20,8 @@ loop opts env = getInputLine "|λ〉" >>= inputHandler
   where
     inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
     inputHandler (Just "quit") = outputStrLn "Bye."
-    inputHandler (Just "(debug)") = outputStrLn "Debug Mode!" >> loop opts{showTree = not $ showTree opts} env
+    inputHandler (Just "(debug)") = outputStrLn "Debug Mode !" >> loop opts{debug = not $ printAST opts} env
+    inputHandler (Just "(print-ast)") = outputStrLn "Showing Tree !" >> loop opts{printAST = not $ printAST opts} env
 --    inputHandler (Just input) = outputStrLn input >> loop opts env
     inputHandler (Just input) = outputStrLn input >> loop opts env
 
