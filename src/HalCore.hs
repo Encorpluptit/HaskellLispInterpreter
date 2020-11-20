@@ -5,6 +5,7 @@ where
 
 import FileManagement
 import HalDataTypes
+import HalEnvironment
 import HalError
 import HalOptions
 import HalREPL
@@ -27,17 +28,17 @@ halCore opts@(Opts replOpt _ _) files
 processFiles :: Opts -> [String] -> (Env, Maybe HalExpr) -> IO (Env, Maybe HalExpr)
 processFiles _ [] res = return res
 processFiles opts (file : left) result =
-  loadFile file >>= getExpr >>= evalFileContent
+  loadFile file >>= getExpr >>= evalExprList
   where
-    getExpr = getExprFromContent opts
-    evalFileContent content = evalContent opts result content >>= processFiles opts left
+    getExpr = getExprListFromContent opts
+    evalExprList content = evalContent opts result content >>= processFiles opts left
 
-getExprFromContent :: Opts -> String -> IO [LispExpr]
-getExprFromContent (Opts _ printAst debugMode) str = case unpackError $ parseContent str of
+getExprListFromContent :: Opts -> String -> IO [LispExpr]
+getExprListFromContent (Opts _ printAst debugMode) str = case unpackError $ parseContent str of
   Left err -> writeErrorAndExit err
   Right a -> if debugMode then printThis a else return a
-    where printThis res = mapM_ (printLispExpr printAst) res >> return res
-
+    where
+      printThis res = mapM_ (printLispExpr printAst putStrLn) res >> return res
 
 evalContent :: Opts -> (Env, Maybe HalExpr) -> [LispExpr] -> IO (Env, Maybe HalExpr)
 evalContent (Opts _ _ False) (env, precExpr) exprs =
@@ -45,8 +46,10 @@ evalContent (Opts _ _ False) (env, precExpr) exprs =
     Right (newEnv, Nothing) -> return (newEnv, precExpr)
     Right (newEnv, newExpr) -> return (newEnv, newExpr)
     Left err -> writeErrorAndExit err
-evalContent (Opts _ _ True) (env, precExpr) exprs =
+evalContent (Opts _ printAst True) (env, precExpr) exprs =
   case unpackError $ evalLispExprList env exprs of
-    Right (newEnv, Nothing) -> print "Nothing" >> return (newEnv, precExpr)
-    Right (newEnv, newExpr) -> print newExpr >> return (newEnv, newExpr)
+    Right (newEnv, Nothing) -> putStrLn "Nothing" >> return (newEnv, precExpr)
+    Right res@(_, Just newExpr) -> printThis newExpr >> return res
     Left err -> writeErrorAndExit err
+  where
+    printThis = printHalExpr printAst putStrLn

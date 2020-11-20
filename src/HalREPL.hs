@@ -1,17 +1,21 @@
-module HalREPL where
+module HalREPL
+  ( launchRepl,
+  )
+where
 
-import Control.Monad.IO.Class
 import Data.List (isPrefixOf)
-import System.Console.Haskeline
+import HalDataTypes
+import HalError
 import HalOptions
 import LispEvaluation
-import HalDataTypes
+import LispExpression
+import System.Console.Haskeline
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline REPL:
 --  * launchRepl: Init lopp with default settings
 --  * loop: Core of REPL fct.
---launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
+-- launchRepl :: (Env -> String -> IO Env) -> Env -> IO ()
 launchRepl :: Opts -> Env -> IO ()
 launchRepl opts env = runInputT replSettings $ loop opts env
 
@@ -20,12 +24,24 @@ loop opts env = getInputLine "|λ〉" >>= inputHandler
   where
     inputHandler Nothing = outputStrLn "Crtl + D Pressed !"
     inputHandler (Just "quit") = outputStrLn "Bye."
-    inputHandler (Just "(debug)") = outputStrLn "Debug Mode !" >> loop opts{debug = not $ printAST opts} env
-    inputHandler (Just "(print-ast)") = outputStrLn "Showing Tree !" >> loop opts{printAST = not $ printAST opts} env
---    inputHandler (Just input) = outputStrLn input >> loop opts env
-    inputHandler (Just input) = outputStrLn input >> loop opts env
+    inputHandler (Just "(debug)") = outputStrLn "Debug Mode !" >> loop opts {debug = not $ printAST opts} env
+    inputHandler (Just "(print-ast)") = outputStrLn "Showing Tree !" >> loop opts {printAST = not $ printAST opts} env
+    inputHandler (Just input) = evalInput opts env input >>= loop opts
 
+evalInput :: Opts -> Env -> String -> InputT IO Env
+evalInput opts@(Opts _ printAst debugMode) env line =
+  case unpackError $ parseInput line of
+    Left _ -> outputStrLn "ERR IN EVAL INPUT" >> return env
+    Right lispExpr -> if debugMode then printExpr lispExpr else evalExpr opts env lispExpr
+      where
+        printExpr res = printLispExpr printAst outputStrLn res >> evalExpr opts env res
 
+evalExpr :: Opts -> Env -> LispExpr -> InputT IO Env
+evalExpr (Opts _ printAst _) env lispExpr =
+  case unpackHalExprError $ evalLispExpr env lispExpr of
+    Right (newEnv, Nothing) -> outputStrLn "Nothing" >> return newEnv
+    Right (newEnv, Just expr) -> printHalExpr printAst outputStrLn expr >> return newEnv
+    Left err -> outputStrLn (show err) >> return env
 
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Haskeline Settings:

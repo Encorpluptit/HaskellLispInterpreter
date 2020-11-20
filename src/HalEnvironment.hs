@@ -1,4 +1,15 @@
-module Environment where
+module HalEnvironment where
+
+import qualified Data.Map as Map
+import HalDataTypes
+
+emptyEnv :: Env
+emptyEnv = Map.empty
+
+lookupEnv :: Identifier -> Env -> ThrowsHalExprError HalExpr
+lookupEnv ident env = case Map.lookup ident env of
+  Just val -> return val
+  Nothing -> return (Ident ident)
 
 --newtype Env = Env (Map.Map Identifier LispVal)
 ----    deriving (Show)

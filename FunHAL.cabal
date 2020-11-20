@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3c8c0bcff0cfeb544609a5f7b125cf12782c3495fb8d0c8643878d27d4ad0405
+-- hash: 17fff5f7474c4693ad2bf40841eddbff9b6a5da74708b08fadc68fc7ccb26161
 
 name:           FunHAL
 version:        0.1.0.0
@@ -27,16 +27,16 @@ source-repository head
 
 library
   exposed-modules:
-      Environment
       FileManagement
+      HalBuiltins
       HalCore
       HalDataTypes
+      HalEnvironment
       HalError
       HalEvaluation
       HalExpression
       HalOptions
       HalREPL
-      LispBuiltins
       LispEvaluation
       LispExpression
       LispNumbers

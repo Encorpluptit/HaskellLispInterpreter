@@ -1,5 +1,6 @@
 module LispExpression
   ( parseContent,
+    parseInput,
     printLispExpr,
     LispExpr (..),
     ThrowsLispExprError,
@@ -21,9 +22,9 @@ data LispExpr
 
 type ThrowsLispExprError = ThrowsError LispExpr
 
-printLispExpr :: Bool -> LispExpr -> IO ()
-printLispExpr False expr = putStrLn $ showLispExpr expr
-printLispExpr True expr = print expr
+printLispExpr :: Monad m => Bool -> (String -> m ()) -> LispExpr -> m ()
+printLispExpr False f = f . showLispExpr
+printLispExpr True f = f . show
 
 showLispExpr :: LispExpr -> String
 showLispExpr (Number nb) = show nb
@@ -36,6 +37,12 @@ parseContent :: String -> ThrowsLispExprError [LispExpr]
 parseContent "" = return []
 parseContent s = case runParser (parseManySpaced parseLispExpr) s of
   Right (expr, left) -> (expr :) <$> parseContent left
+  _ -> throw $ FileError $ "Parsing Failed when parsing: " ++ s
+
+parseInput :: String -> ThrowsLispExprError LispExpr
+parseInput "" = return Nil
+parseInput s = case runParser (parseManySpaced parseLispExpr) s of
+  Right (expr, "") -> return expr
   _ -> throw $ FileError $ "Parsing Failed when parsing: " ++ s
 
 parseLispExpr :: Parser LispExpr

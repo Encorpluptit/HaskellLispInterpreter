@@ -1,5 +1,17 @@
 module HalEvaluation where
 
+import LispExpression
+import HalDataTypes
+import HalError
+import HalEnvironment
+
+interpretLispExpr :: Env -> LispExpr -> ThrowsHalExprError HalExpr
+interpretLispExpr _ (Atom "#t") = return $ Bool True
+interpretLispExpr _ (Atom "#f") = return $ Bool False
+interpretLispExpr env (Atom ident) = lookupEnv ident env
+interpretLispExpr _ (Cons (Atom _) _) = throw $ UnknownError "(Cons (Atom [define, lambda, etc.]) _) not implemented in interpretLispExpr"
+interpretLispExpr _ (Cons _ _ ) = throw $ UnknownError "(Cons expr expr) not implemented in interpretLispExpr"
+interpretLispExpr _ e = return $ Value e
 
 --module Eval
 --  ( eval,
@@ -24,6 +36,8 @@ module HalEvaluation where
 --eval env (ValList (Atom "lambda" : args)) = lambda env args
 --eval env (ValList (func : args)) = evalFunc env (ValList (func : args))
 --eval _ syntaxError = throw $ KeywordError syntaxError
+--interpretLispExpr  env (Cons (Atom ident) body) = compSpe env ident body
+--interpretLispExpr  env (Cons fun rest) = FunCall <$> interpretLispExpr env fun <*> toList env rest
 --
 ---- | -----------------------------------------------------------------------------------------------------------------
 --evalFunc :: Env -> LispVal -> ThrowsError (LispVal, Env)

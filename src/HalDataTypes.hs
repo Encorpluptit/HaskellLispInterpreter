@@ -4,11 +4,10 @@ import qualified Data.Map as Map
 import HalError
 import LispExpression
 
+type Identifier = String
+
 type Env = Map.Map String HalExpr
 
-emptyEnv :: Env
-emptyEnv = Map.empty
---addVarToEnv ::
 
 newtype Built = Built ([HalExpr] -> ThrowsHalExprError HalExpr)
 
@@ -26,5 +25,12 @@ data HalExpr
   | Builtin Built
   deriving (Show)
 
+printHalExpr :: Monad m => Bool -> (String -> m ()) -> HalExpr -> m ()
+printHalExpr False f = f . showHalExpr
+printHalExpr True f = f . show
+
 showHalExpr :: HalExpr -> String
+showHalExpr (Value val) = show val
+showHalExpr (Bool False) = "#f"
+showHalExpr (Bool True) = "#t"
 showHalExpr _ = "TO IMPLEMENT"
