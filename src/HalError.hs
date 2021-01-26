@@ -12,6 +12,7 @@ data HALError a
   | NotFunction a
   | KeywordError a
   | SyntaxError String
+  | DivByZero String
   | FileError String
   deriving (Eq)
 
@@ -38,6 +39,7 @@ showHALError (SyntaxError msg) = msg
 showHALError (KeywordError val) = "KeyWord Error, got : " ++ show val
 showHALError (NotFunction val) = "attempt to apply non-procedure #t" ++ " : " ++ show val
 showHALError (FileError val) = "Problem reading content of " ++ " : " ++ show val
+showHALError (DivByZero op) = "Division by zero with { " ++ op ++ " }."
 
 
 newtype ThrowsError a b = HandleError (Either (HALError a) b)

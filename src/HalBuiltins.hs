@@ -1,10 +1,160 @@
-module HalBuiltins where
---module LispBuiltins
---( builtins,
---)
---where
+module HalBuiltins
+( builtins,
+  builtinsEnv,
+)
+where
 
-type BinaryOperator a = (a -> a -> a)
+import qualified Data.Map as Map
+import HalDataTypes
+import LispNumbers (LispNumber(..))
+import LispExpression (LispExpr(..))
+import HalError
+import Data.Ratio ((%))
+
+type BinOp a = (a -> a -> a)
+type NumberBinOp = BinOp LispNumber
+type NumberBinCompOp = (LispNumber -> LispNumber -> Bool)
+
+builtinsEnv :: Env
+builtinsEnv = Map.fromList builtins
+
+builtins :: [(Identifier, HalExpr)]
+builtins =
+  [ ("+", Builtin (Built (nbBinOpe (+) 0))),
+    ("-", Builtin (Built (nbBinOpe (-) 0))),
+    ("*", Builtin (Built (nbBinOpe (*) 1))),
+    ("div", Builtin (Built (nbDivOpe div))),
+    ("<", Builtin (Built (numericBoolExpr (<)))),
+    ("<=", Builtin (Built (numericBoolExpr (<=)))),
+    (">", Builtin (Built (numericBoolExpr (>)))),
+    (">=", Builtin (Built (numericBoolExpr (>=)))),
+    ("=", Builtin (Built (numericBoolExpr (==)))),
+    ("!=", Builtin (Built (numericBoolExpr (/=)))),
+--    ("/", Builtin (Built (nbDivRationalOpe (/)))),
+    ("eq?", Builtin (Built equal))
+  ]
+--    ("++", Builtin (Built (appendOpe)))
+
+nbBinOpe :: NumberBinOp -> LispNumber -> [HalExpr] -> ThrowsHalExprError HalExpr
+nbBinOpe _ acc [] = return $ Value $ Number acc
+nbBinOpe op acc params = Value . Number . foldl op acc <$> mapM unpackNumber params
+
+nbDivOpe :: NumberBinOp -> [HalExpr] -> ThrowsHalExprError HalExpr
+nbDivOpe _ [Value (Number _), Value (Number 0)] = throw $ DivByZero "div"
+nbDivOpe op [Value (Number a), Value (Number b)] = return . Value . Number $ a `op` b
+
+--nbDivRationalOpe :: NumberBinOp -> [HalExpr] -> ThrowsHalExprError HalExpr
+--nbDivRationalOpe _ [Value (Number a)] = return $ Value $ Number $ LispRational $ () % a
+
+--bDiv :: (Int -> Int -> Int) -> [AST] -> Either String AST
+--bDiv _ [Val (Num a), Val (Num 0)] = Left "division by zero"
+--bDiv f [Val (Num a), Val (Num b)] = return $ Val (Num (f a b))
+
+unpackNumber :: HalExpr -> ThrowsHalExprError LispNumber
+unpackNumber (Value (Number a)) = return a
+unpackNumber val = throw $ TypeError "Mismatch Value when unpacking LispNumber" val
+
+
+equal :: [HalExpr] -> ThrowsHalExprError HalExpr
+equal [Bool b1, Bool b2] = return (Bool (b1 == b2))
+equal [Value Nil, Value Nil] = return (Bool True)
+equal [Value (Number a), Value (Number b)] = return $ Bool $ a == b
+equal [Value(Atom a), Value (Atom b)] = return $ Bool $ a == b
+equal [_, _] = return $ Bool False
+equal args = throw $ NbArgsError "eq?" 2 args
+
+boolBinaryOp :: (HalExpr -> ThrowsHalExprError LispNumber) -> NumberBinCompOp -> [HalExpr] -> ThrowsHalExprError HalExpr
+boolBinaryOp unpacker op [a, b] = do
+    left <- unpacker a
+    right <- unpacker b
+    return $ Bool $ left `op` right
+boolBinaryOp _ _ args = throw $ NbArgsError "op" 2 args
+
+
+numericBoolExpr :: NumberBinCompOp -> [HalExpr] -> ThrowsHalExprError HalExpr
+numericBoolExpr = boolBinaryOp unpackNumber
+
+--bInf :: [AST] -> Either String AST
+--bInf [Val (Num a), Val (Num b)] | a < b = return $ Bool True
+--bInf [_, _] = return $ Bool False
+--bInf lst = Left ("error executing '<' (bad args): " ++ show lst)
+--
+--bCons :: [AST] -> Either String AST
+--bCons [Val e1, Val e2] = return $ Val (Cons e1 e2)
+--bCons lst = Left ("cons: Bad args: " ++ show lst)
+--
+--bCar :: [AST] -> Either String AST
+--bCar [Val (Cons e1 _)] = return $ Val e1
+--bCar l = Left ("car: Bad args: " ++ show l)
+--
+--bCdr :: [AST] -> Either String AST
+--bCdr [Val (Cons _ e2)] = return $ Val e2
+--bCdr l = Left ("cdr: Bad args: " ++ show l)
+
+--bOpp :: (Int -> Int -> Int) -> Int -> [AST] -> Either String AST
+--bOpp fct init [] = return $ Val (Num init)
+--bOpp fct init (Val (Num a) : xs) =
+--  (\(Val (Num b)) -> Val (Num (fct a b))) <$> bOpp fct init xs
+
+--nbDivOpe ::
+--bDiv :: (Int -> Int -> Int) -> [AST] -> Either String AST
+--bDiv _ [Val (Num a), Val (Num 0)] = Left "division by zero"
+--bDiv f [Val (Num a), Val (Num b)] = return $ Val (Num (f a b))
+
+--appendOpe ::
+
+--numericBinaryOp :: String -> BinOp  -> [LispVal] -> ThrowsError LispVal
+--numericBinaryOp op _ [] = throw $ NbArgsError op 2 []
+----numericBinaryOp "+" fct [val] = ValNum (fct <$> 0 <*> unpackNumeric "+" val)
+----numericBinaryOp "+" fct [val] = ValNum . foldl1 fct <$> mapM (unpackNumeric "+") (ValNum 0: [val])
+---- TODO: Remove this HotFIX
+--numericBinaryOp "+" fct [ValNum val] = return $ ValNum (0 `fct` val)
+--numericBinaryOp "-" fct [ValNum val] = return $ ValNum (0 `fct` val)
+--numericBinaryOp "*" fct [ValNum val] = return $ ValNum (1 `fct` val)
+--numericBinaryOp "div" fct [ValNum val] = return $ ValNum (1 `fct` val)
+
+
+--
+--defaultEnv :: Env
+--defaultEnv = Map.fromList $ builtinsAryth ++ builtinsPreds ++ builtinsLists
+
+--bDiv :: (Int -> Int -> Int) -> [AST] -> Either String AST
+--bDiv _ [Val (Num a), Val (Num 0)] = Left "division by zero"
+--bDiv f [Val (Num a), Val (Num b)] = return $ Val (Num (f a b))
+--
+--bOpp :: (Int -> Int -> Int) -> Int -> [AST] -> Either String AST
+--bOpp fct init [] = return $ Val (Num init)
+--bOpp fct init (Val (Num a) : xs) =
+--  (\(Val (Num b)) -> Val (Num (fct a b))) <$> bOpp fct init xs
+--
+--bAt :: [AST] -> Either String AST
+--bAt [Val Cons {}] = return (Bool False)
+--bAt _ = return (Bool True)
+--
+--bEq :: [AST] -> Either String AST
+--bEq [Bool b1, Bool b2] = return (Bool (b1 == b2))
+--bEq [Val Nil, Val Nil] = return (Bool True)
+--bEq [Val (Num a), Val (Num b)] | a == b = return (Bool True)
+--bEq [Val (Symb a), Val (Symb b)] | a == b = return (Bool True)
+--bEq [_, _] = return (Bool False)
+--bEq lst = Left ("error executing eq? (bad args): " ++ show lst)
+--
+--bInf :: [AST] -> Either String AST
+--bInf [Val (Num a), Val (Num b)] | a < b = return $ Bool True
+--bInf [_, _] = return $ Bool False
+--bInf lst = Left ("error executing '<' (bad args): " ++ show lst)
+--
+--bCons :: [AST] -> Either String AST
+--bCons [Val e1, Val e2] = return $ Val (Cons e1 e2)
+--bCons lst = Left ("cons: Bad args: " ++ show lst)
+--
+--bCar :: [AST] -> Either String AST
+--bCar [Val (Cons e1 _)] = return $ Val e1
+--bCar l = Left ("car: Bad args: " ++ show l)
+--
+--bCdr :: [AST] -> Either String AST
+--bCdr [Val (Cons _ e2)] = return $ Val e2
+--bCdr l = Left ("cdr: Bad args: " ++ show l)
 
 
 --module Builtins
@@ -70,6 +220,14 @@ type BinaryOperator a = (a -> a -> a)
 --    ("string<=?", stringBoolExpr "string=?" (<=)),
 --    ("string>=?", stringBoolExpr "string=?" (>=)),
 --    ("string-length", stringLength)
+--    ("div", Builtin (Built (bDiv div))),
+--    ("mod", Builtin (Built (bDiv mod))),
+--    ("atom?", Builtin (Built bAt)),
+--    ("eq?", Builtin (Built bEq)),
+--    ("<", Builtin (Built bInf)),
+--    ("cons", Builtin (Built bCons)),
+--    ("car", Builtin (Built bCar)),
+--    ("cdr", Builtin (Built bCdr))
 --    ]
 ---- | -----------------------------------------------------------------------------------------------------------------
 ---- TODO: Add the following built-ins:

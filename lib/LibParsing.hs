@@ -144,6 +144,12 @@ parseFloat = parseNegFloat <|> parseUFloat
 parseUDouble :: Parser Double
 parseUDouble = read <$> some parseFloatDigit
 
+parseStrictUDouble :: Parser Double
+parseStrictUDouble = read <$> res
+    where
+        res = (++) <$> some parseDigit <*> after
+        after = (:) <$> parseChar '.' <*> some parseDigit
+
 -- | -----------------------------------------------------------------------------------------------------------------
 -- Using Alternative Functor to read Double from String (ghc understand itself String->Double) on the digits parsed by some.
 -- <$ Notation to apply parseChar, ignore the result and apply the negate function on parseUInt
@@ -152,11 +158,15 @@ parseDouble :: Parser Double
 parseDouble = parseNegDouble <|> parseUDouble
   where
     parseNegDouble = (negate <$ parseChar '-') <*> parseUDouble
+parseStrictDouble :: Parser Double
+parseStrictDouble = parseNegDouble <|> parseStrictUDouble
+  where
+    parseNegDouble = (negate <$ parseChar '-') <*> parseStrictUDouble
 
 parseRational :: Parser Rational
 parseRational = do
   first <- parseInteger
-  _ <- parseSpacedChar '/'
+  _ <- parseSpacedChar '%'
   second <- parseInteger
   --    return $ toRational $ first `mod` second
   return $ first % second

@@ -4,8 +4,8 @@ module HalCore
 where
 
 import FileManagement
+import HalBuiltins
 import HalDataTypes
-import HalEnvironment
 import HalError
 import HalOptions
 import HalREPL
@@ -23,10 +23,11 @@ halCore opts@(Opts replOpt _ _) files
   | replOpt = evalFiles >>= launchRepl opts . fst
   | otherwise = evalFiles >> return ()
   where
-    evalFiles = processFiles opts files (emptyEnv, Nothing)
+    evalFiles = processFiles opts files (builtinsEnv, Nothing)
 
 processFiles :: Opts -> [String] -> (Env, Maybe HalExpr) -> IO (Env, Maybe HalExpr)
-processFiles _ [] res = return res
+processFiles _ [] res@(_, Nothing) = return res
+processFiles (Opts _ printAst _) [] res@(_, Just expr) = printHalExpr printAst putStrLn expr >> return res
 processFiles opts (file : left) result =
   loadFile file >>= getExpr >>= evalExprList
   where
@@ -42,12 +43,12 @@ getExprListFromContent (Opts _ printAst debugMode) str = case unpackError $ pars
 
 evalContent :: Opts -> (Env, Maybe HalExpr) -> [LispExpr] -> IO (Env, Maybe HalExpr)
 evalContent (Opts _ _ False) (env, precExpr) exprs =
-  case unpackError $ evalLispExprList env exprs of
+  case unpackError $ evalLispExprList exprs env of
     Right (newEnv, Nothing) -> return (newEnv, precExpr)
     Right (newEnv, newExpr) -> return (newEnv, newExpr)
     Left err -> writeErrorAndExit err
 evalContent (Opts _ printAst True) (env, precExpr) exprs =
-  case unpackError $ evalLispExprList env exprs of
+  case unpackError $ evalLispExprList exprs env  of
     Right (newEnv, Nothing) -> putStrLn "Nothing" >> return (newEnv, precExpr)
     Right res@(_, Just newExpr) -> printThis newExpr >> return res
     Left err -> writeErrorAndExit err

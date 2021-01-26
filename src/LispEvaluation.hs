@@ -4,6 +4,7 @@ import LispExpression
 import HalDataTypes
 import HalError
 import HalOptions
+import HalEvaluation
 
 import Debug.Trace
 
@@ -12,24 +13,16 @@ import Debug.Trace
 --evalLispExpr file env = compAll <$> readFile file
 --  where compAll str = parseContent str >>= evalEnvAll env
 --
-evalLispExprList :: Env -> [LispExpr] -> ThrowsHalExprError (Env, Maybe HalExpr)
-evalLispExprList env [] = return (env, Nothing)
-evalLispExprList env [x] = evalLispExpr env x
-evalLispExprList env (x : xs) = evalLispExpr env x >>= \(newEnv, _) -> evalLispExprList newEnv xs
---evalEnvAll env (x : xs) = do
---  (env2, res) <- evalEnv env x
---  evalEnvAll env2 xs
+evalLispExprList :: [LispExpr] -> Env -> ThrowsHalExprError (Env, Maybe HalExpr)
+evalLispExprList [] env = return (env, Nothing)
+evalLispExprList [x] env = evalLispExpr env x
+evalLispExprList (x : xs) env =
+    evalLispExpr env x >>= evalLispExprList xs . fst
 
 evalLispExpr :: Env -> LispExpr -> ThrowsHalExprError (Env, Maybe HalExpr)
---evalLispExpr _ _ = throw $ UnknownError "LOL ICI"
---evalLispExpr env l = trace (show l) return (env, Just $ Bool True )
-evalLispExpr env l = return (env, Just $ Bool True )
---evalLispExpr :: Env -> LispExpr -> ThrowsHalExprError (Env, Maybe HalExpr)
---evalLispExpr env x = compile env x >>= evalEnv'
---  where
---    evalEnv' (Def name expr) = do
---      e2 <- eval env expr
---      return (Map.insert name e2 env, Nothing)
---    evalEnv' e1 = do
---      res <- eval env e1
---      return (env, Just res)
+evalLispExpr env expr = evalLispValue env expr >>= eval
+--    where eval halExpr =  evalHalExpr env halExpr >>= \res -> return (env, Just res)
+    where eval halExpr =  (,) env . Just <$> evalHalExpr env halExpr
+--    where eval halExpr = do
+--            res <- evalHalExpr env halExpr
+--            return (env, Just res)

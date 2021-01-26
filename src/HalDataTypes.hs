@@ -6,12 +6,11 @@ import LispExpression
 
 type Identifier = String
 
-type Env = Map.Map String HalExpr
-
-
-newtype Built = Built ([HalExpr] -> ThrowsHalExprError HalExpr)
+type Env = Map.Map Identifier HalExpr
 
 type ThrowsHalExprError = ThrowsError HalExpr
+
+newtype Built = Built ([HalExpr] -> ThrowsHalExprError HalExpr)
 
 unpackHalExprError :: ThrowsHalExprError b -> Either (HALError HalExpr) b
 unpackHalExprError (HandleError val) = val
@@ -23,9 +22,14 @@ data HalExpr
   = Value LispExpr
   | Bool Bool
   | Builtin Built
+  | Lambda (Maybe Identifier) [Identifier] HalExpr Env
+  | Func HalExpr [HalExpr]
+  | Condition HalExpr HalExpr HalExpr
+  | Ident Identifier
+  | Define Identifier HalExpr
   deriving (Show)
 
-printHalExpr :: Monad m => Bool -> (String -> m ()) -> HalExpr -> m ()
+printHalExpr :: Bool -> (String -> m ()) -> HalExpr -> m ()
 printHalExpr False f = f . showHalExpr
 printHalExpr True f = f . show
 

@@ -8,7 +8,6 @@ module LispExpression
 where
 
 import Control.Applicative
-import Data.Functor
 import HalError
 import LibParsing
 import LispNumbers
@@ -22,7 +21,7 @@ data LispExpr
 
 type ThrowsLispExprError = ThrowsError LispExpr
 
-printLispExpr :: Monad m => Bool -> (String -> m ()) -> LispExpr -> m ()
+printLispExpr :: Bool -> (String -> m ()) -> LispExpr -> m ()
 printLispExpr False f = f . showLispExpr
 printLispExpr True f = f . show
 
@@ -43,7 +42,7 @@ parseInput :: String -> ThrowsLispExprError LispExpr
 parseInput "" = return Nil
 parseInput s = case runParser (parseManySpaced parseLispExpr) s of
   Right (expr, "") -> return expr
-  _ -> throw $ FileError $ "Parsing Failed when parsing: " ++ s
+  _ -> throw $ SyntaxError $ "Parsing Failed when parsing: " ++ s
 
 parseLispExpr :: Parser LispExpr
 parseLispExpr = parseCons <|> parseLispExprNumber <|> parseManySpaced parseAtom <|> parseQuoted <|> parseNil

@@ -1,17 +1,62 @@
 module HalEvaluation where
 
-import LispExpression
 import HalDataTypes
-import HalError
 import HalEnvironment
+import HalError
+import LispExpression
 
-interpretLispExpr :: Env -> LispExpr -> ThrowsHalExprError HalExpr
-interpretLispExpr _ (Atom "#t") = return $ Bool True
-interpretLispExpr _ (Atom "#f") = return $ Bool False
-interpretLispExpr env (Atom ident) = lookupEnv ident env
-interpretLispExpr _ (Cons (Atom _) _) = throw $ UnknownError "(Cons (Atom [define, lambda, etc.]) _) not implemented in interpretLispExpr"
-interpretLispExpr _ (Cons _ _ ) = throw $ UnknownError "(Cons expr expr) not implemented in interpretLispExpr"
-interpretLispExpr _ e = return $ Value e
+evalLispValue :: Env -> LispExpr -> ThrowsHalExprError HalExpr
+evalLispValue _ (Atom "#t") = return $ Bool True
+evalLispValue _ (Atom "#f") = return $ Bool False
+evalLispValue env (Atom ident) = lookupEnv ident env
+evalLispValue env (Cons (Atom "+") body) = evalFunc env (Atom "+") body
+evalLispValue env (Cons (Atom "div") body) = evalFunc env (Atom "div") body
+evalLispValue _ (Cons (Atom _) _) = throw $ UnknownError "(Cons (Atom [define, lambda, etc.]) _) not implemented in interpretLispExpr"
+evalLispValue _ (Cons _ _) = throw $ UnknownError "(Cons expr expr) not implemented in interpretLispExpr"
+evalLispValue _ e = return $ Value e
+
+evalHalExpr :: Env -> HalExpr -> ThrowsHalExprError HalExpr
+evalHalExpr env (Func f args) = do
+  fct <- evalHalExpr env f
+  evaluatedArgs <- traverse (evalHalExpr env) args
+  apply env fct evaluatedArgs
+evalHalExpr env (Condition cond ifthen ifelse) = evalHalExpr env cond >>= evalIf
+  where
+    evalIf (Bool False) = evalHalExpr env ifelse
+    evalIf _ = evalHalExpr env ifthen
+evalHalExpr env (Ident name) = case unpackError $ lookupEnv name env of
+  Right res -> return res
+  _ -> throw $ UnboundVar (Ident name)
+evalHalExpr env (Lambda name params body _) =
+  return $ Lambda name params body env
+evalHalExpr _ expr = return expr
+
+apply :: Env -> HalExpr -> [HalExpr] -> ThrowsHalExprError HalExpr
+apply _ (Builtin (Built f)) args = f args
+apply _ func _ = throw $ NotFunction func
+
+evalFunc :: Env -> LispExpr -> LispExpr -> ThrowsHalExprError HalExpr
+evalFunc env f body = Func <$> evalLispValue env f <*> evalBody env body
+
+evalBody :: Env -> LispExpr -> ThrowsHalExprError [HalExpr]
+evalBody env expr = sequence =<< evalCons (evalLispValue env) expr
+
+evalCons :: (LispExpr -> a1) -> LispExpr -> ThrowsHalExprError [a1]
+evalCons _ Nil = return []
+evalCons f (Cons expr' rest) = (f expr' :) <$> evalCons f rest
+evalCons _ expr' = throw $ SyntaxError $ "Malformed Cons: " ++ show expr'
+
+ifStatement :: Env -> LispExpr -> ThrowsHalExprError HalExpr
+ifStatement env (Cons cond (Cons validated (Cons other Nil))) =
+  Condition <$> evalLispValue env cond <*> evalLispValue env validated <*> evalLispValue env other
+
+condStatement :: Env -> LispExpr -> ThrowsHalExprError HalExpr
+--cond _ Nil = Left "Compile: cond without 'catchall' ending..."
+condStatement env (Cons (Cons (Atom "else") (Cons body Nil)) Nil) = evalLispValue env body
+condStatement env (Cons (Cons (Atom "#t") (Cons body Nil)) Nil) = evalLispValue env body
+condStatement env (Cons (Cons cond (Cons body Nil)) rest) =
+  Condition <$> evalLispValue env cond <*> evalLispValue env body <*> condStatement env rest
+condStatement _ e0 = throw $ SyntaxError ("can't parse: " ++ show e0)
 
 --module Eval
 --  ( eval,
